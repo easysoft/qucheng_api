@@ -1,0 +1,58 @@
+---
+kind: pipeline
+type: kubernetes
+name: ci
+clone:
+  depth: 1
+  disable: true
+
+steps:
+  - name: 获取代码
+    image: ccr.ccs.tencentyun.com/easycorp/drone-plugin-git
+    pull: always
+    settings:
+      depth: 1
+      branch: ${DRONE_BRANCH}
+      url: git@git.external-prod.chandao.net:pangu/cne-api.git
+
+  - name: 构建测试镜像
+    image: ccr.ccs.tencentyun.com/easycorp/drone-plugin-builderx
+    volumes:
+      - name: dockersock
+        path: /var/run
+    pull: always
+    privileged: true
+    settings:
+      registry: ccr.ccs.tencentyun.com
+      repo: "ccr.ccs.tencentyun.com/platform/cne-api"
+      debug: true
+      mode: ${DRONE_BRANCH}
+      # auto_tag: true
+      # auto_tag_suffix: "${DRONE_BRANCH}-"
+      tags: ${DRONE_BRANCH}
+      purge: false
+      no_cache: false
+      dockerfile: "Dockerfile"
+    when:
+      branch:
+        - master
+
+services:
+  - name: docker daemon
+    image: ccr.ccs.tencentyun.com/easycorp/drone-plugin-dockerd
+    privileged: true
+    volumes:
+      - name: dockersock
+        path: /var/run
+
+volumes:
+  - name: dockersock
+    temp: {}
+
+node_selector:
+  workload_type: "spot"
+
+tolerations:
+  - key: ci.zcorp.cc
+    operator: Exists
+    effect: NoSchedule

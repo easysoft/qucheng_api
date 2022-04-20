@@ -17,3 +17,5 @@
 
 .idea/
 backup/
+_output/
+.build/

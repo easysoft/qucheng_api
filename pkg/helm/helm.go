@@ -1,7 +1,10 @@
+// Copyright (c) 2022 北京渠成软件有限公司 All rights reserved.
+// Use of this source code is governed by Z PUBLIC LICENSE 1.2 (ZPL 1.2)
+// license that can be found in the LICENSE file.
+
 package helm
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -11,8 +14,6 @@ import (
 	"helm.sh/helm/v3/pkg/cli/values"
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/release"
-
-	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm/push"
 )
 
 type HelmAction struct {
@@ -56,6 +57,9 @@ func (h *HelmAction) Install(name, chart string) (*release.Release, error) {
 
 	p := getter.All(h.settings)
 	vals, err := valueOpts.MergeValues(p)
+	if err != nil {
+		return nil, err
+	}
 
 	client.Namespace = h.namespace
 	client.ReleaseName = name
