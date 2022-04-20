@@ -63,7 +63,10 @@ lint: ## lint code
 		echo "$$OUTPUT"; \
 	fi
 
-default: gencopyright fmt lint ## fmt code
+doc: ## doc
+	hack/scripts/gendocs.sh
+
+default: gencopyright doc fmt lint ## fmt code
 
 build: ## build binary
 	@echo "build bin ${GIT_VERSION} $(GIT_COMMIT) $(GIT_BRANCH) $(BUILD_DATE) $(GIT_TREE_STATE)"

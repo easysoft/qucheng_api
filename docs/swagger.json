@@ -1,0 +1,133 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "CNE API.",
+        "title": "CNE API",
+        "contact": {
+            "name": "QuCheng Pangu Team"
+        },
+        "license": {
+            "name": "Z PUBLIC LICENSE 1.2"
+        },
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api/cne/app/install": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "安装接口",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "应用管理"
+                ],
+                "summary": "安装接口",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwtToken",
+                        "name": "Authorization",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "staticToken",
+                        "name": "X-Auth-Token",
+                        "in": "header"
+                    },
+                    {
+                        "description": "meta",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.AppCreateModel"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/router.response2xx"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/router.response5xx"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "model.AppCreateModel": {
+            "type": "object",
+            "required": [
+                "chart",
+                "cluster",
+                "name",
+                "namespace"
+            ],
+            "properties": {
+                "chart": {
+                    "type": "string"
+                },
+                "cluster": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "namespace": {
+                    "type": "string"
+                }
+            }
+        },
+        "router.response2xx": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "object"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "pagination": {
+                    "type": "object"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "router.response5xx": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "object"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "pagination": {
+                    "type": "object"
+                },
+                "success": {
+                    "type": "boolean",
+                    "default": false
+                }
+            }
+        }
+    }
+}

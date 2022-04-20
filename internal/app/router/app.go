@@ -15,6 +15,19 @@ import (
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/model"
 )
 
+// AppInstall 安装接口
+// @Summary 安装接口
+// @Tags 应用管理
+// @Description 安装接口
+// @Accept json
+// @Produce json
+// @Param Authorization header string false "jwtToken"
+// @Param X-Auth-Token header string false "staticToken"
+// @Security ApiKeyAuth
+// @Param body body model.AppCreateModel true "meta"
+// @Success 201 {object} response2xx
+// @Failure 500 {object} response5xx
+// @Router /api/cne/app/install [post]
 func AppInstall(c *gin.Context) {
 	var (
 		err  error

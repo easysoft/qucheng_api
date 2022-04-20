@@ -27,6 +27,11 @@ func initKubeLogs() {
 	klog.InitFlags(gofs)
 }
 
+// @title CNE API
+// @version 1.0.0
+// @description CNE API.
+// @contact.name QuCheng Pangu Team
+// @license.name Z PUBLIC LICENSE 1.2
 func main() {
 	initKubeLogs()
 

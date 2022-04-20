@@ -37,3 +37,17 @@ func renderJsonWithPagination(c *gin.Context, code int, data interface{}, p inte
 		"pagination": p,
 	})
 }
+
+type response2xx struct {
+	Success    bool        `json:"success"`
+	Message    string      `json:"message"`
+	Data       interface{} `json:"data"`
+	Pagination interface{} `json:"pagination"`
+}
+
+type response5xx struct {
+	Success    bool        `json:"success" default:"false"`
+	Message    string      `json:"message"`
+	Data       interface{} `json:"data"`
+	Pagination interface{} `json:"pagination"`
+}

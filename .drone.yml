@@ -23,8 +23,8 @@ steps:
     pull: always
     privileged: true
     settings:
-      registry: ccr.ccs.tencentyun.com
-      repo: "ccr.ccs.tencentyun.com/platform/cne-api"
+      registry: hub.qucheng.com
+      repo: hub.qucheng.com/platform/cne-api
       debug: true
       mode: ${DRONE_BRANCH}
       # auto_tag: true

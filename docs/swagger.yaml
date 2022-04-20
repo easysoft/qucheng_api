@@ -1,0 +1,86 @@
+definitions:
+  model.AppCreateModel:
+    properties:
+      chart:
+        type: string
+      cluster:
+        type: string
+      name:
+        type: string
+      namespace:
+        type: string
+    required:
+    - chart
+    - cluster
+    - name
+    - namespace
+    type: object
+  router.response2xx:
+    properties:
+      data:
+        type: object
+      message:
+        type: string
+      pagination:
+        type: object
+      success:
+        type: boolean
+    type: object
+  router.response5xx:
+    properties:
+      data:
+        type: object
+      message:
+        type: string
+      pagination:
+        type: object
+      success:
+        default: false
+        type: boolean
+    type: object
+info:
+  contact:
+    name: QuCheng Pangu Team
+  description: CNE API.
+  license:
+    name: Z PUBLIC LICENSE 1.2
+  title: CNE API
+  version: 1.0.0
+paths:
+  /api/cne/app/install:
+    post:
+      consumes:
+      - application/json
+      description: 安装接口
+      parameters:
+      - description: jwtToken
+        in: header
+        name: Authorization
+        type: string
+      - description: staticToken
+        in: header
+        name: X-Auth-Token
+        type: string
+      - description: meta
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.AppCreateModel'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/router.response2xx'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/router.response5xx'
+      security:
+      - ApiKeyAuth: []
+      summary: 安装接口
+      tags:
+      - 应用管理
+swagger: "2.0"

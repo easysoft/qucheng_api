@@ -9,6 +9,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/swaggo/gin-swagger/swaggerFiles"
+	_ "gitlab.zcorp.cc/pangu/cne-api/docs"
 )
 
 func Config(r *gin.Engine) {
@@ -28,6 +32,7 @@ func Config(r *gin.Engine) {
 		)
 	}))
 	r.GET("/ping", ping)
-
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
+	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	r.POST("/api/cne/app/install", AppInstall)
 }
