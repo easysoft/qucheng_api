@@ -4,35 +4,47 @@
 
 package router
 
-import "github.com/gin-gonic/gin"
+import (
+	"time"
+
+	"github.com/gin-gonic/gin"
+)
+
+const (
+	successMessage = "请求成功"
+)
 
 func renderError(c *gin.Context, code int, err error) {
 	_ = c.Error(err)
 	c.JSON(code, gin.H{
-		"success": false,
+		"code":      code,
 		"message": err.Error(),
+		"timestamp": time.Now().Unix(),
 	})
 }
 
 func renderSuccess(c *gin.Context, code int) {
 	c.JSON(code, gin.H{
-		"success": true,
-		"message": "success",
+		"code":      200,
+		"message":   successMessage,
+		"timestamp": time.Now().Unix(),
 	})
 }
 
 func renderJson(c *gin.Context, code int, data interface{}) {
 	c.JSON(code, gin.H{
-		"success": true,
-		"message": "success",
-		"data":    data,
+		"code":      200,
+		"message":   successMessage,
+		"timestamp": time.Now().Unix(),
+		"data":    	data,
 	})
 }
 
 func renderJsonWithPagination(c *gin.Context, code int, data interface{}, p interface{}) {
 	c.JSON(code, gin.H{
-		"success":    true,
-		"message":    "success",
+		"code":      200,
+		"message":    successMessage,
+		"timestamp": time.Now().Unix(),
 		"data":       data,
 		"pagination": p,
 	})
