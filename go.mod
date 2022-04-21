@@ -6,7 +6,10 @@ require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/chartmuseum/helm-push v0.10.2
 	github.com/gin-gonic/gin v1.7.7
+	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.0
+	github.com/robfig/cron v1.2.0
+	github.com/spf13/cobra v1.3.0
 	github.com/swaggo/gin-swagger v1.4.2
 	github.com/swaggo/swag v1.8.1
 	go.uber.org/automaxprocs v1.5.1
@@ -15,6 +18,7 @@ require (
 	k8s.io/apimachinery v0.23.5
 	k8s.io/client-go v0.23.5
 	k8s.io/klog/v2 v2.30.0
+	k8s.io/kubectl v0.23.5
 )
 
 require (
@@ -98,7 +102,6 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.30.0 // indirect
@@ -108,7 +111,6 @@ require (
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
-	github.com/spf13/cobra v1.3.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/testify v1.7.1 // indirect
 	github.com/ugorji/go/codec v1.1.7 // indirect
@@ -140,7 +142,6 @@ require (
 	k8s.io/component-base v0.23.5 // indirect
 	k8s.io/helm v2.17.0+incompatible // indirect
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65 // indirect
-	k8s.io/kubectl v0.23.5 // indirect
 	k8s.io/utils v0.0.0-20211116205334-6203023598ed // indirect
 	oras.land/oras-go v1.1.1 // indirect
 	sigs.k8s.io/json v0.0.0-20211020170558-c049b76a60c6 // indirect

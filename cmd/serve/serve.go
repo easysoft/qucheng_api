@@ -8,8 +8,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
+	"github.com/robfig/cron"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/router"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/kube/cluster"
+	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm"
 	"k8s.io/klog/v2"
 )
 
@@ -37,6 +39,16 @@ func serve(cmd *cobra.Command, args []string) {
 		klog.Fatal(err)
 		os.Exit(1)
 	}
+
+	klog.Info("Setup cron tasks")
+	cron := cron.New()
+	err = cron.AddFunc("0 */5 * * *", func() {
+		err = helm.RepoUpdate()
+		if err != nil {
+			fmt.Println(err)
+		}
+	})
+	cron.Start()
 
 	klog.Info("Starting cne-api...")
 
