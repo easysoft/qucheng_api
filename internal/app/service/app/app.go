@@ -29,3 +29,13 @@ func (am *AppListManager) Install(name string, body model.AppCreateModel) error 
 	_, err = h.Install(name, defaultChartRepo + "/" + body.Chart)
 	return err
 }
+
+func (am *AppListManager) UnInstall(name string) error {
+	h, err := helm.NamespaceScope(am.namespace)
+	if err != nil {
+		return err
+	}
+
+	err = h.Uninstall(name)
+	return err
+}

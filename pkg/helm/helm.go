@@ -72,6 +72,12 @@ func (h *HelmAction) Install(name, chart string) (*release.Release, error) {
 	return rel, nil
 }
 
+func (h *HelmAction) Uninstall(name string) error {
+	client := action.NewUninstall(h.actionConfig)
+	_, err := client.Run(name)
+	return err
+}
+
 //func Push() error {
 //	cli, err := push.New()
 //	if err != nil {

@@ -4,8 +4,13 @@
 
 package model
 
-type AppCreateModel struct {
+type AppModel struct {
 	QueryNamespace
 	Name  string `json:"name" binding:"required"`
+}
+
+type AppCreateModel struct {
+	AppModel
 	Chart string `json:"chart" binding:"required"`
 }
+

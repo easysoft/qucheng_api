@@ -51,3 +51,27 @@ func AppInstall(c *gin.Context) {
 		"app", body.Name)
 	renderSuccess(c, http.StatusCreated)
 }
+
+func AppUnInstall(c *gin.Context) {
+	var (
+		err  error
+		body model.AppModel
+	)
+	if err = c.ShouldBindJSON(&body); err != nil {
+		renderError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	if err = service.Apps(body.Cluster, body.Namespace).UnInstall(body.Name); err != nil {
+		klog.ErrorS(err, "uninstall app failed",
+			"cluster", body.Cluster, "namespace", body.Namespace,
+			"app", body.Name)
+		renderError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	klog.InfoS("uninstall app successful",
+		"cluster", body.Cluster, "namespace", body.Namespace,
+		"app", body.Name)
+	renderSuccess(c, http.StatusOK)
+}

@@ -36,4 +36,5 @@ func Config(r *gin.Engine) {
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	r.POST("/api/cne/app/install", AppInstall)
+	r.POST("/api/cne/app/uninstall", AppUnInstall)
 }

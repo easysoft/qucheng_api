@@ -72,6 +72,9 @@ build: ## build binary
 	@echo "build bin ${GIT_VERSION} $(GIT_COMMIT) $(GIT_BRANCH) $(BUILD_DATE) $(GIT_TREE_STATE)"
 	$(GO_BUILD) -o $(BIN_DIR)/cne-api cmd/main.go
 
+run:
+	go run cmd/main.go serve
+
 clean: ## clean
 	rm -rf $(BIN_DIR)
 
