@@ -1,6 +1,6 @@
 ###########################################
 .EXPORT_ALL_VARIABLES:
-VERSION_PKG := gitlab.zcorp.cc/pangu/qcadmin/cmd/version
+VERSION_PKG := gitlab.zcorp.cc/pangu/cne-api/cmd/version
 ROOT_DIR := $(CURDIR)
 BUILD_DIR := $(ROOT_DIR)/_output
 BIN_DIR := $(BUILD_DIR)/bin

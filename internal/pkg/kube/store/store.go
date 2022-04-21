@@ -27,7 +27,7 @@ type Informer struct {
 	Pods        cache.SharedIndexInformer
 	DivideRules cache.SharedIndexInformer
 	Ingresses   cache.SharedIndexInformer
-	Endpoints 	cache.SharedIndexInformer
+	Endpoints   cache.SharedIndexInformer
 }
 
 func (i *Informer) Run(stopCh chan struct{}) {
@@ -47,14 +47,14 @@ func (i *Informer) Run(stopCh chan struct{}) {
 }
 
 type Lister struct {
-	Namespaces  v1.NamespaceLister
-	Pods        v1.PodLister
-	Ingresses   networkv1.IngressLister
-	Endpoints   v1.EndpointsLister
+	Namespaces v1.NamespaceLister
+	Pods       v1.PodLister
+	Ingresses  networkv1.IngressLister
+	Endpoints  v1.EndpointsLister
 }
 
 type Clients struct {
-	Base   *kubernetes.Clientset
+	Base *kubernetes.Clientset
 }
 
 type Storer struct {

@@ -5,29 +5,14 @@
 package main
 
 import (
-	"flag"
-	"fmt"
-	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/kube/cluster"
-	"net/http"
 	"os"
 
+	"github.com/spf13/cobra"
+	"gitlab.zcorp.cc/pangu/cne-api/cmd/serve"
+	"gitlab.zcorp.cc/pangu/cne-api/cmd/version"
 	_ "go.uber.org/automaxprocs"
-
-	"github.com/gin-gonic/gin"
-	"k8s.io/klog/v2"
-
-	"gitlab.zcorp.cc/pangu/cne-api/internal/app/router"
+	"k8s.io/kubectl/pkg/util/i18n"
 )
-
-const (
-	listenPort = 8087
-)
-
-func initKubeLogs() {
-	gofs := flag.NewFlagSet("klog", flag.ExitOnError)
-	_ = gofs.Set("add_dir_header", "true")
-	klog.InitFlags(gofs)
-}
 
 // @title CNE API
 // @version 1.0.0
@@ -35,27 +20,14 @@ func initKubeLogs() {
 // @contact.name QuCheng Pangu Team
 // @license.name Z PUBLIC LICENSE 1.2
 func main() {
-	initKubeLogs()
+	cmd := &cobra.Command{
+		Use:   "cne-api",
+		Short: i18n.T("cne-api"),
+	}
 
-	stopCh := make(chan struct{})
-
-	klog.Info("Initialize clusters")
-	err := cluster.Init(stopCh)
-	if err != nil {
-		klog.Fatal(err)
+	cmd.AddCommand(serve.NewCmdServe())
+	cmd.AddCommand(version.NewCmdVersion())
+	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
 	}
-
-	klog.Info("Starting cne-api...")
-
-	klog.Info("Setup gin engine")
-	r := gin.New()
-	router.Config(r)
-
-	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%d", listenPort),
-		Handler: r,
-	}
-	klog.Infof("start application server, Listen on port: %d", listenPort)
-	_ = srv.ListenAndServe()
 }

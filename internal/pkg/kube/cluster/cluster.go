@@ -16,7 +16,7 @@ type Cluster struct {
 	Config  rest.Config
 	Store   *store.Storer
 	Clients *store.Clients
-	inner	bool
+	inner   bool
 	primary bool
 }
 
@@ -55,7 +55,7 @@ func add(name string, config rest.Config, inner, primary bool) error {
 		Config:  config,
 		Store:   s,
 		Clients: s.Clients,
-		inner:	inner,
+		inner:   inner,
 		primary: primary,
 	}
 
@@ -69,7 +69,7 @@ func Init(stopChan chan struct{}) error {
 		return err
 	}
 
-	if err = add("primary", *restCfg, true, true);err != nil {
+	if err = add("primary", *restCfg, true, true); err != nil {
 		return err
 	}
 

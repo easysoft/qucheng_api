@@ -24,4 +24,4 @@ COPY --from=builder /go/src/_output/bin/cne-api /usr/bin/cne-api
 
 RUN chmod +x /usr/bin/cne-api
 
-CMD /usr/bin/cne-api
+CMD ["/usr/bin/cne-api", "serve"]
