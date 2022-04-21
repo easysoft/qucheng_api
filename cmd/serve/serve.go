@@ -42,7 +42,7 @@ func serve(cmd *cobra.Command, args []string) {
 
 	klog.Info("Setup cron tasks")
 	cron := cron.New()
-	err = cron.AddFunc("0 */5 * * *", func() {
+	err = cron.AddFunc("0 */2 * * *", func() {
 		err = helm.RepoUpdate()
 		if err != nil {
 			fmt.Println(err)
