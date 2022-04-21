@@ -7,7 +7,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/kube/cluster"
 	"net/http"
+	"os"
 
 	_ "go.uber.org/automaxprocs"
 
@@ -34,6 +36,15 @@ func initKubeLogs() {
 // @license.name Z PUBLIC LICENSE 1.2
 func main() {
 	initKubeLogs()
+
+	stopCh := make(chan struct{})
+
+	klog.Info("Initialize clusters")
+	err := cluster.Init(stopCh)
+	if err != nil {
+		klog.Fatal(err)
+		os.Exit(1)
+	}
 
 	klog.Info("Starting cne-api...")
 

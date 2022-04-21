@@ -37,6 +37,7 @@ func NamespaceScope(namespace string) (*HelmAction, error) {
 	}
 	h := newAction(settings, actionConfig)
 	h.namespace = namespace
+
 	return h, nil
 }
 
