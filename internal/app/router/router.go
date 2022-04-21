@@ -32,6 +32,7 @@ func Config(r *gin.Engine) {
 		)
 	}))
 	r.GET("/ping", ping)
+	r.GET("/health", health)
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	r.POST("/api/cne/app/install", AppInstall)
