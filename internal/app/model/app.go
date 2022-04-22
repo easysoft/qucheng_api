@@ -6,7 +6,7 @@ package model
 
 type AppModel struct {
 	QueryNamespace
-	Name  string `json:"name" binding:"required"`
+	Name  string `form:"name" json:"name" binding:"required"`
 }
 
 type AppCreateModel struct {
@@ -14,3 +14,7 @@ type AppCreateModel struct {
 	Chart string `json:"chart" binding:"required"`
 }
 
+type AppManageModel struct {
+	AppModel
+	Chart string `json:"chart" binding:"required"`
+}

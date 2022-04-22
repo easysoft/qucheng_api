@@ -5,12 +5,14 @@ import (
 	"time"
 
 	metav1 "k8s.io/api/core/v1"
+	metaappsv1 "k8s.io/api/apps/v1"
 	metanetworkv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	v1 "k8s.io/client-go/listers/core/v1"
+	appsv1 "k8s.io/client-go/listers/apps/v1"
 	networkv1 "k8s.io/client-go/listers/networking/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
@@ -23,11 +25,11 @@ const (
 
 type Informer struct {
 	Namespaces  cache.SharedIndexInformer
-	CloneSets   cache.SharedIndexInformer
 	Pods        cache.SharedIndexInformer
-	DivideRules cache.SharedIndexInformer
 	Ingresses   cache.SharedIndexInformer
 	Endpoints   cache.SharedIndexInformer
+	Secrets 		cache.SharedIndexInformer
+	Deployments cache.SharedIndexInformer
 }
 
 func (i *Informer) Run(stopCh chan struct{}) {
@@ -35,22 +37,28 @@ func (i *Informer) Run(stopCh chan struct{}) {
 	go i.Pods.Run(stopCh)
 	go i.Ingresses.Run(stopCh)
 	go i.Endpoints.Run(stopCh)
+	go i.Secrets.Run(stopCh)
+	go i.Deployments.Run(stopCh)
 
 	if !cache.WaitForCacheSync(stopCh,
 		i.Namespaces.HasSynced,
 		i.Pods.HasSynced,
 		i.Ingresses.HasSynced,
 		i.Endpoints.HasSynced,
+		i.Secrets.HasSynced,
+		i.Deployments.HasSynced,
 	) {
 		runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
 	}
 }
 
 type Lister struct {
-	Namespaces v1.NamespaceLister
-	Pods       v1.PodLister
-	Ingresses  networkv1.IngressLister
-	Endpoints  v1.EndpointsLister
+	Namespaces  v1.NamespaceLister
+	Pods        v1.PodLister
+	Ingresses   networkv1.IngressLister
+	Endpoints   v1.EndpointsLister
+	Secrets 		v1.SecretLister
+	Deployments appsv1.DeploymentLister
 }
 
 type Clients struct {
@@ -87,6 +95,12 @@ func NewStorer(config rest.Config) *Storer {
 
 		s.informers.Endpoints = factory.Core().V1().Endpoints().Informer()
 		s.listers.Endpoints = factory.Core().V1().Endpoints().Lister()
+
+		s.informers.Secrets = factory.Core().V1().Secrets().Informer()
+		s.listers.Secrets = factory.Core().V1().Secrets().Lister()
+
+		s.informers.Deployments = factory.Apps().V1().Deployments().Informer()
+		s.listers.Deployments = factory.Apps().V1().Deployments().Lister()
 	}
 
 	return s
@@ -126,4 +140,20 @@ func (s *Storer) GetEndpoint(namespace, name string) (*metav1.Endpoints, error) 
 
 func (s *Storer) ListEndpoints(namespace string, selector labels.Selector) ([]*metav1.Endpoints, error) {
 	return s.listers.Endpoints.Endpoints(namespace).List(selector)
+}
+
+func (s *Storer) GetSecret(namespace, name string) (*metav1.Secret, error) {
+	return s.listers.Secrets.Secrets(namespace).Get(name)
+}
+
+func (s *Storer) ListSecrets(namespace string, selector labels.Selector) ([]*metav1.Secret, error) {
+	return s.listers.Secrets.Secrets(namespace).List(selector)
+}
+
+func (s *Storer) GetDeployment(namespace string, name string) (*metaappsv1.Deployment, error) {
+	return s.listers.Deployments.Deployments(namespace).Get(name)
+}
+
+func (s *Storer) ListDeployments(namespace string, selector labels.Selector) ([]*metaappsv1.Deployment, error) {
+	return s.listers.Deployments.Deployments(namespace).List(selector)
 }

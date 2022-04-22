@@ -5,6 +5,7 @@
 package router
 
 import (
+	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/constant"
 	"net/http"
 
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service"
@@ -79,26 +80,73 @@ func AppUnInstall(c *gin.Context) {
 func AppStart(c *gin.Context) {
 	var (
 		err  error
-		body model.AppModel
+		body model.AppManageModel
 	)
 
 	if err = c.ShouldBindJSON(&body); err != nil {
 		renderError(c, http.StatusBadRequest, err)
 		return
 	}
+	app, err := service.Apps(body.Cluster, body.Namespace).GetApp(body.Name)
+	if err != nil {
+		renderError(c, http.StatusInternalServerError, err)
+		return
+	}
 
+	err = app.Start(body.Chart)
+	if err != nil {
+		renderError(c, http.StatusInternalServerError, err)
+		return
+	}
 	renderSuccess(c, http.StatusOK)
 }
 
 func AppStop(c *gin.Context) {
 	var (
 		err  error
-		body model.AppModel
+		body model.AppManageModel
 	)
 	if err = c.ShouldBindJSON(&body); err != nil {
 		renderError(c, http.StatusBadRequest, err)
 		return
 	}
 
+	app, err := service.Apps(body.Cluster, body.Namespace).GetApp(body.Name)
+	if err != nil {
+		renderError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	err = app.Stop(body.Chart)
+	if err != nil {
+		renderError(c, http.StatusInternalServerError, err)
+		return
+	}
 	renderSuccess(c, http.StatusOK)
+}
+
+func AppStatus(c *gin.Context) {
+	var (
+		err error
+		query model.AppModel
+		//app *app.AppInstance
+		data model.AppRespStatus
+	)
+	if err = c.ShouldBindQuery(&query); err != nil {
+		renderError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	//if app, err = service.Apps(query.Cluster, query.Namespace).GetAppWithOutHelm(query.Name);err != nil {
+	//	renderError(c, http.StatusInternalServerError, err)
+	//	return
+	//}
+	_, err = service.Apps(query.Cluster, query.Namespace).GetAppWithOutHelm(query.Name)
+	if err != nil {
+		data.Status = constant.AppStatusAbnormal.String()
+	} else {
+		data.Status = constant.AppStatusRunning.String()
+	}
+
+	renderJson(c, http.StatusOK, data)
 }

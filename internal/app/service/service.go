@@ -9,5 +9,5 @@ import (
 )
 
 func Apps(clusterName, namespace string) *app.AppListManager {
-	return app.NewApps(clusterName, namespace)
+	return app.NewApps("primary", namespace)
 }

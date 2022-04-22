@@ -5,8 +5,11 @@
 package helm
 
 import (
+	"context"
 	"log"
 	"os"
+
+	"github.com/imdario/mergo"
 
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
@@ -88,3 +91,40 @@ func (h *HelmAction) Uninstall(name string) error {
 //	fmt.Println(res.StatusCode, res.Body)
 //	return err
 //}
+
+func (h *HelmAction) GetValues(name string) (map[string]interface{}, error) {
+	client := action.NewGetValues(h.actionConfig)
+	vals, err := client.Run(name)
+	return vals, err
+}
+
+func (h *HelmAction) Upgrade(name string, chart string, chartValues map[string]interface{}) (interface{}, error) {
+	client := action.NewUpgrade(h.actionConfig)
+	valueOpts := &values.Options{}
+
+	client.Namespace = h.namespace
+
+	cp, err := client.ChartPathOptions.LocateChart(chart, h.settings)
+	if err != nil {
+		return nil, err
+	}
+
+	chartRequested, err := loader.Load(cp)
+	if err != nil {
+		return nil, err
+	}
+
+	p := getter.All(h.settings)
+	vals, err := valueOpts.MergeValues(p)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := mergo.Merge(&vals, chartValues, mergo.WithOverwriteWithEmptyValue); err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	rel, err := client.RunWithContext(ctx, name, chartRequested, vals)
+	return rel, err
+}

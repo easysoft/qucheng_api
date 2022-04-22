@@ -36,13 +36,9 @@ func Exist(name string) bool {
 	return false
 }
 
-func Get(name string) (*Cluster, error) {
-	if !Exist(name) {
-		return nil, &NotFound{Name: name}
-	}
-
+func Get(name string) *Cluster {
 	c, _ := kubeClusters[name]
-	return c, nil
+	return c
 }
 
 func add(name string, config rest.Config, inner, primary bool) error {

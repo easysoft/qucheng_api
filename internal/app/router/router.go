@@ -39,4 +39,5 @@ func Config(r *gin.Engine) {
 	r.POST("/api/cne/app/uninstall", AppUnInstall)
 	r.POST("/api/cne/app/start", AppStart)
 	r.POST("/api/cne/app/stop", AppStop)
+	r.GET("/api/cne/app/status", AppStatus)
 }
