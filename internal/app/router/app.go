@@ -75,3 +75,30 @@ func AppUnInstall(c *gin.Context) {
 		"app", body.Name)
 	renderSuccess(c, http.StatusOK)
 }
+
+func AppStart(c *gin.Context) {
+	var (
+		err  error
+		body model.AppModel
+	)
+
+	if err = c.ShouldBindJSON(&body); err != nil {
+		renderError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	renderSuccess(c, http.StatusOK)
+}
+
+func AppStop(c *gin.Context) {
+	var (
+		err  error
+		body model.AppModel
+	)
+	if err = c.ShouldBindJSON(&body); err != nil {
+		renderError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	renderSuccess(c, http.StatusOK)
+}

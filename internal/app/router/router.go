@@ -37,4 +37,6 @@ func Config(r *gin.Engine) {
 	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	r.POST("/api/cne/app/install", AppInstall)
 	r.POST("/api/cne/app/uninstall", AppUnInstall)
+	r.POST("/api/cne/app/start", AppStart)
+	r.POST("/api/cne/app/stop", AppStop)
 }
