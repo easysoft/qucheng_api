@@ -1,22 +1,18 @@
+// Copyright (c) 2022 北京渠成软件有限公司 All rights reserved.
+// Use of this source code is governed by Z PUBLIC LICENSE 1.2 (ZPL 1.2)
+// license that can be found in the LICENSE file.
+
 package serve
 
 import (
+	"context"
 	"flag"
-	"fmt"
-	"net/http"
-	"os"
+	"os/signal"
+	"syscall"
 
-	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
-	"github.com/robfig/cron"
-	"gitlab.zcorp.cc/pangu/cne-api/internal/app/router"
-	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/kube/cluster"
-	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm"
+	gins "gitlab.zcorp.cc/pangu/cne-api/internal/app/serve"
 	"k8s.io/klog/v2"
-)
-
-const (
-	listenPort = 8087
 )
 
 func NewCmdServe() *cobra.Command {
@@ -30,38 +26,15 @@ func NewCmdServe() *cobra.Command {
 
 func serve(cmd *cobra.Command, args []string) {
 	initKubeLogs()
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
+	go func() {
+		<-ctx.Done()
+		stop()
+	}()
 
-	stopCh := make(chan struct{})
-
-	klog.Info("Initialize clusters")
-	err := cluster.Init(stopCh)
-	if err != nil {
-		klog.Fatal(err)
-		os.Exit(1)
+	if err := gins.Serve(ctx); err != nil {
+		klog.Fatal("run serve: %v", err)
 	}
-
-	klog.Info("Setup cron tasks")
-	cron := cron.New()
-	err = cron.AddFunc("0 */2 * * *", func() {
-		err = helm.RepoUpdate()
-		if err != nil {
-			fmt.Println(err)
-		}
-	})
-	cron.Start()
-
-	klog.Info("Starting cne-api...")
-
-	klog.Info("Setup gin engine")
-	r := gin.New()
-	router.Config(r)
-
-	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%d", listenPort),
-		Handler: r,
-	}
-	klog.Infof("start application server, Listen on port: %d", listenPort)
-	_ = srv.ListenAndServe()
 }
 
 func initKubeLogs() {

@@ -26,7 +26,7 @@ func (am *AppListManager) Install(name string, body model.AppCreateModel) error 
 		return err
 	}
 
-	_, err = h.Install(name, defaultChartRepo + "/" + body.Chart)
+	_, err = h.Install(name, defaultChartRepo+"/"+body.Chart)
 	return err
 }
 
