@@ -5,6 +5,7 @@
 package router
 
 import (
+	"fmt"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/constant"
 	"net/http"
 
@@ -141,8 +142,10 @@ func AppStatus(c *gin.Context) {
 	//	renderError(c, http.StatusInternalServerError, err)
 	//	return
 	//}
-	_, err = service.Apps(query.Cluster, query.Namespace).GetAppWithOutHelm(query.Name)
+	success, err := service.Apps(query.Cluster, query.Namespace).GetAppWithOutHelm(query.Name)
+	fmt.Println("success:", success)
 	if err != nil {
+		fmt.Println(err)
 		data.Status = constant.AppStatusAbnormal.String()
 	} else {
 		data.Status = constant.AppStatusRunning.String()

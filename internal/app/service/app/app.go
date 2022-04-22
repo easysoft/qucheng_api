@@ -58,8 +58,8 @@ func (am *AppListManager) GetAppWithOutHelm(name string) (bool, error) {
 	reqName, _ := labels.NewRequirement("name", selection.Equals, []string{name})
 	reqOwner, _ := labels.NewRequirement("owner", selection.Equals, []string{"helm"})
 	selector = selector.Add(*reqName, *reqOwner)
-	_, err := am.ks.Store.ListSecrets(am.namespace, selector)
-	return err == nil, err
+	secrets, err := am.ks.Store.ListSecrets(am.namespace, selector)
+	return len(secrets) > 0, err
 }
 
 type AppInstance struct {
