@@ -1,6 +1,6 @@
 ###########################################
 .EXPORT_ALL_VARIABLES:
-VERSION_PKG := gitlab.zcorp.cc/pangu/cne-api/cmd/version
+VERSION_PKG := github.com/ergoapi/util/version
 ROOT_DIR := $(CURDIR)
 BUILD_DIR := $(ROOT_DIR)/_output
 BIN_DIR := $(BUILD_DIR)/bin
@@ -10,28 +10,19 @@ GOPRIVATE = gitlab.zcorp.cc
 GOSUMDB = sum.golang.google.cn
 
 BUILD_RELEASE   ?= $(shell cat VERSION || echo "0.0.1")
-MODE ?= $(shell cat VERSION | grep -q "-" && echo "stable" || echo "edge")
-BUILD_DATE := $(shell date "+%F %T")
+BUILD_DATE := $(shell date "+%Y%m%d")
 GIT_COMMIT := $(shell git rev-parse --short HEAD || echo "abcdefgh")
 APP_VERSION := ${BUILD_RELEASE}-${BUILD_DATE}-${GIT_COMMIT}
 
-LDFLAGS := "-w -s \
-	-X '$(VERSION_PKG).Version=$(BUILD_RELEASE)' \
-	-X '$(VERSION_PKG).BuildDate=$(BUILD_DATE)' \
-	-X '$(VERSION_PKG).GitCommitHash=$(GIT_COMMIT)' \
-	-X '$(VERSION_PKG).Mode=$(MODE)' \
-	-X 'k8s.io/client-go/pkg/version.gitVersion=${BUILD_RELEASE}' \
-  -X 'k8s.io/client-go/pkg/version.gitCommit=${GIT_COMMIT}' \
-  -X 'k8s.io/client-go/pkg/version.gitTreeState=dirty' \
-  -X 'k8s.io/client-go/pkg/version.buildDate=${BUILD_DATE}' \
-	-X 'k8s.io/client-go/pkg/version.gitMajor=1' \
-	-X 'k8s.io/client-go/pkg/version.gitMinor=23' \
-  -X 'k8s.io/component-base/version.gitVersion=${BUILD_RELEASE}' \
-  -X 'k8s.io/component-base/version.gitCommit=${GIT_COMMIT}' \
-  -X 'k8s.io/component-base/version.gitTreeState=dirty' \
-	-X 'k8s.io/component-base/version.gitMajor=1' \
-	-X 'k8s.io/component-base/version.gitMinor=23' \
-  -X 'k8s.io/component-base/version.buildDate=${BUILD_DATE}'"
+LDFLAGS := "-w \
+	-X $(VERSION_PKG).release=$(APP_VERSION) \
+	-X $(VERSION_PKG).gitVersion=$(APP_VERSION) \
+	-X $(VERSION_PKG).gitCommit=$(GIT_COMMIT) \
+	-X $(VERSION_PKG).gitBranch=$(GIT_BRANCH) \
+	-X $(VERSION_PKG).buildDate=$(BUILD_DATE) \
+	-X $(VERSION_PKG).gitTreeState=core \
+	-X $(VERSION_PKG).gitMajor=1 \
+	-X $(VERSION_PKG).gitMinor=0"
 
 GO_BUILD_FLAGS+=-ldflags $(LDFLAGS)
 GO_BUILD := go build $(GO_BUILD_FLAGS)

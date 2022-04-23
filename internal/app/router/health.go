@@ -4,12 +4,18 @@
 
 package router
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/ergoapi/util/version"
+	_ "github.com/ergoapi/util/version/prometheus"
+	"github.com/gin-gonic/gin"
+)
 
 func ping(c *gin.Context) {
-	c.String(200, "pong")
+	v := version.Get()
+	c.String(200, "pong "+v.Release)
 }
 
 func health(c *gin.Context) {
-	c.String(200, "OK")
+	v := version.Get()
+	c.String(200, "health "+v.Release)
 }

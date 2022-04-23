@@ -92,7 +92,6 @@ var doc = `{
             "type": "object",
             "required": [
                 "chart",
-                "cluster",
                 "name",
                 "namespace"
             ],

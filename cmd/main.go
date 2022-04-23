@@ -5,8 +5,6 @@
 package main
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
 	"gitlab.zcorp.cc/pangu/cne-api/cmd/serve"
 	"gitlab.zcorp.cc/pangu/cne-api/cmd/version"
@@ -28,6 +26,6 @@ func main() {
 	cmd.AddCommand(serve.NewCmdServe())
 	cmd.AddCommand(version.NewCmdVersion())
 	if err := cmd.Execute(); err != nil {
-		os.Exit(1)
+		panic(err)
 	}
 }
