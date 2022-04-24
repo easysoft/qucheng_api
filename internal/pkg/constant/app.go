@@ -1,18 +1,25 @@
 package constant
 
-type AppStatusType string
+type AppStatusType int
 
 const (
-	AppStatusInit     AppStatusType = "init"     // 初始化
-	AppStatusStop     AppStatusType = "stop"     // 停止
-	AppStatusStartup  AppStatusType = "startup"  // 启动
-	AppStatusSuspend  AppStatusType = "suspend"  // 暂停
-	AppStatusDestroy  AppStatusType = "destroy"  // 销毁
-	AppStatusRunning  AppStatusType = "running"  // 运行中
-	AppStatusAbnormal AppStatusType = "abnormal" // 异常
-	AppStatusUnknown 	AppStatusType = "unknown"  // 未知
+	AppStatusUnknown  AppStatusType = iota // 初始化
+	AppStatusAbnormal                      // 异常
+	AppStatusInit                          // 初始化
+	AppStatusStop                          // 停止
+	AppStatusStartup                       // 启动
+	AppStatusDestroy                       // 销毁
+	AppStatusSuspend                       // 暂停
+	AppStatusRunning                       // 运行中
 )
 
-func (a AppStatusType) String() string {
-	return string(a)
+var AppStatusMap = map[AppStatusType]string{
+	AppStatusUnknown:  "unknown",
+	AppStatusAbnormal: "abnormal",
+	AppStatusInit:     "init",
+	AppStatusStop:     "stop",
+	AppStatusStartup:  "startup",
+	AppStatusDestroy:  "destroy",
+	AppStatusSuspend:  "suspend",
+	AppStatusRunning:  "running",
 }

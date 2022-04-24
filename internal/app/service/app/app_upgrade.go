@@ -22,7 +22,7 @@ func (a *AppInstance) Stop(chart string) error {
 		return err
 	}
 
-	_, err = h.Upgrade(a.name, defaultChartRepo + "/" + chart, vals)
+	_, err = h.Upgrade(a.name, defaultChartRepo+"/"+chart, vals)
 	return err
 }
 
@@ -40,6 +40,6 @@ func (a *AppInstance) Start(chart string) error {
 		vals["global"] = globalVals
 	}
 
-	_, err = h.Upgrade(a.name, defaultChartRepo + "/" + chart, vals)
+	_, err = h.Upgrade(a.name, defaultChartRepo+"/"+chart, vals)
 	return err
 }

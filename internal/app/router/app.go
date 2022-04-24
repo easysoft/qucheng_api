@@ -5,8 +5,7 @@
 package router
 
 import (
-	"fmt"
-	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/constant"
+	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service/app"
 	"net/http"
 
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service"
@@ -128,28 +127,22 @@ func AppStop(c *gin.Context) {
 
 func AppStatus(c *gin.Context) {
 	var (
-		err error
+		err   error
 		query model.AppModel
-		//app *app.AppInstance
-		data model.AppRespStatus
+		app   *app.AppInstance
+		data  *model.AppRespStatus
 	)
 	if err = c.ShouldBindQuery(&query); err != nil {
 		renderError(c, http.StatusBadRequest, err)
 		return
 	}
 
-	//if app, err = service.Apps(query.Cluster, query.Namespace).GetAppWithOutHelm(query.Name);err != nil {
-	//	renderError(c, http.StatusInternalServerError, err)
-	//	return
-	//}
-	success, err := service.Apps(query.Cluster, query.Namespace).GetAppWithOutHelm(query.Name)
-	fmt.Println("success:", success)
+	app, err = service.Apps(query.Cluster, query.Namespace).GetApp(query.Name)
 	if err != nil {
-		fmt.Println(err)
-		data.Status = constant.AppStatusAbnormal.String()
-	} else {
-		data.Status = constant.AppStatusRunning.String()
+		renderError(c, http.StatusInternalServerError, err)
+		return
 	}
 
+	data = app.ParseStatus()
 	renderJson(c, http.StatusOK, data)
 }

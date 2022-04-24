@@ -8,15 +8,15 @@ import (
 	"fmt"
 	"time"
 
-	metav1 "k8s.io/api/core/v1"
 	metaappsv1 "k8s.io/api/apps/v1"
+	metav1 "k8s.io/api/core/v1"
 	metanetworkv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
-	v1 "k8s.io/client-go/listers/core/v1"
 	appsv1 "k8s.io/client-go/listers/apps/v1"
+	v1 "k8s.io/client-go/listers/core/v1"
 	networkv1 "k8s.io/client-go/listers/networking/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
@@ -28,12 +28,13 @@ const (
 )
 
 type Informer struct {
-	Namespaces  cache.SharedIndexInformer
-	Pods        cache.SharedIndexInformer
-	Ingresses   cache.SharedIndexInformer
-	Endpoints   cache.SharedIndexInformer
-	Secrets 		cache.SharedIndexInformer
-	Deployments cache.SharedIndexInformer
+	Namespaces   cache.SharedIndexInformer
+	Pods         cache.SharedIndexInformer
+	Ingresses    cache.SharedIndexInformer
+	Endpoints    cache.SharedIndexInformer
+	Secrets      cache.SharedIndexInformer
+	Deployments  cache.SharedIndexInformer
+	StatefulSets cache.SharedIndexInformer
 }
 
 func (i *Informer) Run(stopCh chan struct{}) {
@@ -43,6 +44,7 @@ func (i *Informer) Run(stopCh chan struct{}) {
 	go i.Endpoints.Run(stopCh)
 	go i.Secrets.Run(stopCh)
 	go i.Deployments.Run(stopCh)
+	go i.StatefulSets.Run(stopCh)
 
 	if !cache.WaitForCacheSync(stopCh,
 		i.Namespaces.HasSynced,
@@ -51,18 +53,20 @@ func (i *Informer) Run(stopCh chan struct{}) {
 		i.Endpoints.HasSynced,
 		i.Secrets.HasSynced,
 		i.Deployments.HasSynced,
+		i.StatefulSets.HasSynced,
 	) {
 		runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
 	}
 }
 
 type Lister struct {
-	Namespaces  v1.NamespaceLister
-	Pods        v1.PodLister
-	Ingresses   networkv1.IngressLister
-	Endpoints   v1.EndpointsLister
-	Secrets 		v1.SecretLister
-	Deployments appsv1.DeploymentLister
+	Namespaces   v1.NamespaceLister
+	Pods         v1.PodLister
+	Ingresses    networkv1.IngressLister
+	Endpoints    v1.EndpointsLister
+	Secrets      v1.SecretLister
+	Deployments  appsv1.DeploymentLister
+	StatefulSets appsv1.StatefulSetLister
 }
 
 type Clients struct {
@@ -105,6 +109,9 @@ func NewStorer(config rest.Config) *Storer {
 
 		s.informers.Deployments = factory.Apps().V1().Deployments().Informer()
 		s.listers.Deployments = factory.Apps().V1().Deployments().Lister()
+
+		s.informers.StatefulSets = factory.Apps().V1().StatefulSets().Informer()
+		s.listers.StatefulSets = factory.Apps().V1().StatefulSets().Lister()
 	}
 
 	return s
@@ -160,4 +167,12 @@ func (s *Storer) GetDeployment(namespace string, name string) (*metaappsv1.Deplo
 
 func (s *Storer) ListDeployments(namespace string, selector labels.Selector) ([]*metaappsv1.Deployment, error) {
 	return s.listers.Deployments.Deployments(namespace).List(selector)
+}
+
+func (s *Storer) GetStatefulSet(namespace string, name string) (*metaappsv1.StatefulSet, error) {
+	return s.listers.StatefulSets.StatefulSets(namespace).Get(name)
+}
+
+func (s *Storer) ListStatefulSets(namespace string, selector labels.Selector) ([]*metaappsv1.StatefulSet, error) {
+	return s.listers.StatefulSets.StatefulSets(namespace).List(selector)
 }

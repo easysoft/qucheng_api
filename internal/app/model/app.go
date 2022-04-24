@@ -6,7 +6,7 @@ package model
 
 type AppModel struct {
 	QueryNamespace
-	Name  string `form:"name" json:"name" binding:"required"`
+	Name string `form:"name" json:"name" binding:"required"`
 }
 
 type AppCreateModel struct {
