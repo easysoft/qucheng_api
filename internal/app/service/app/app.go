@@ -53,9 +53,9 @@ func (am *AppListManager) GetApp(name string) (*AppInstance, error) {
 
 	selector := labels.NewSelector()
 	label1, _ := labels.NewRequirement("app.kubernetes.io/managed-by", selection.Equals, []string{"Helm"})
-	label2, _ := labels.NewRequirement("heritage", selection.Equals, []string{"Helm"})
+	//label2, _ := labels.NewRequirement("heritage", selection.Equals, []string{"Helm"})
 	labelRelease, _ := labels.NewRequirement("release", selection.Equals, []string{name})
-	selector = selector.Add(*label1, *label2, *labelRelease)
+	selector = selector.Add(*label1, *labelRelease)
 
 	deployments, err := am.ks.Store.ListDeployments(am.namespace, selector)
 	if err != nil {
