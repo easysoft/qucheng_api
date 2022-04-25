@@ -4,6 +4,7 @@ import "gitlab.zcorp.cc/pangu/cne-api/internal/pkg/constant"
 
 type AppRespStatus struct {
 	Status     string                   `json:"status"`
+	AccessHost string                   `json:"access_host"`
 	Components []AppRespStatusComponent `json:"components"`
 }
 

@@ -11,12 +11,12 @@ func parseStatus(replicas, availableReplicas, updatedReplicas, readyReplicas int
 
 	appStatus = constant.AppStatusUnknown
 	if replicas == 0 {
-		appStatus = constant.AppStatusStop
+		appStatus = constant.AppStatusStoped
 		return
 	}
 
 	if replicas > 0 && readyReplicas < replicas {
-		appStatus = constant.AppStatusStartup
+		appStatus = constant.AppStatusStarting
 		return
 	}
 

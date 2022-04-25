@@ -5,7 +5,7 @@ import (
 	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm"
 )
 
-func (a *AppInstance) Stop(chart string) error {
+func (a *Instance) Stop(chart string) error {
 	h, _ := helm.NamespaceScope(a.namespace)
 	vals, err := h.GetValues(a.name)
 	if err != nil {
@@ -26,7 +26,7 @@ func (a *AppInstance) Stop(chart string) error {
 	return err
 }
 
-func (a *AppInstance) Start(chart string) error {
+func (a *Instance) Start(chart string) error {
 	h, _ := helm.NamespaceScope(a.namespace)
 	vals, err := h.GetValues(a.name)
 	if err != nil {

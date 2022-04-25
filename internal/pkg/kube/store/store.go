@@ -28,9 +28,11 @@ const (
 )
 
 type Informer struct {
+	Nodes        cache.SharedIndexInformer
 	Namespaces   cache.SharedIndexInformer
 	Pods         cache.SharedIndexInformer
 	Ingresses    cache.SharedIndexInformer
+	Services     cache.SharedIndexInformer
 	Endpoints    cache.SharedIndexInformer
 	Secrets      cache.SharedIndexInformer
 	Deployments  cache.SharedIndexInformer
@@ -38,18 +40,22 @@ type Informer struct {
 }
 
 func (i *Informer) Run(stopCh chan struct{}) {
+	go i.Nodes.Run(stopCh)
 	go i.Namespaces.Run(stopCh)
 	go i.Pods.Run(stopCh)
 	go i.Ingresses.Run(stopCh)
+	go i.Services.Run(stopCh)
 	go i.Endpoints.Run(stopCh)
 	go i.Secrets.Run(stopCh)
 	go i.Deployments.Run(stopCh)
 	go i.StatefulSets.Run(stopCh)
 
 	if !cache.WaitForCacheSync(stopCh,
+		i.Nodes.HasSynced,
 		i.Namespaces.HasSynced,
 		i.Pods.HasSynced,
 		i.Ingresses.HasSynced,
+		i.Services.HasSynced,
 		i.Endpoints.HasSynced,
 		i.Secrets.HasSynced,
 		i.Deployments.HasSynced,
@@ -60,9 +66,11 @@ func (i *Informer) Run(stopCh chan struct{}) {
 }
 
 type Lister struct {
+	Nodes        v1.NodeLister
 	Namespaces   v1.NamespaceLister
 	Pods         v1.PodLister
 	Ingresses    networkv1.IngressLister
+	Services     v1.ServiceLister
 	Endpoints    v1.EndpointsLister
 	Secrets      v1.SecretLister
 	Deployments  appsv1.DeploymentLister
@@ -92,6 +100,9 @@ func NewStorer(config rest.Config) *Storer {
 		s.Clients.Base = cs
 		factory := informers.NewSharedInformerFactoryWithOptions(cs, resyncPeriod)
 
+		s.informers.Nodes = factory.Core().V1().Nodes().Informer()
+		s.listers.Nodes = factory.Core().V1().Nodes().Lister()
+
 		s.informers.Namespaces = factory.Core().V1().Namespaces().Informer()
 		s.listers.Namespaces = factory.Core().V1().Namespaces().Lister()
 
@@ -100,6 +111,9 @@ func NewStorer(config rest.Config) *Storer {
 
 		s.informers.Ingresses = factory.Networking().V1().Ingresses().Informer()
 		s.listers.Ingresses = factory.Networking().V1().Ingresses().Lister()
+
+		s.informers.Services = factory.Core().V1().Services().Informer()
+		s.listers.Services = factory.Core().V1().Services().Lister()
 
 		s.informers.Endpoints = factory.Core().V1().Endpoints().Informer()
 		s.listers.Endpoints = factory.Core().V1().Endpoints().Lister()
@@ -119,6 +133,14 @@ func NewStorer(config rest.Config) *Storer {
 
 func (s *Storer) Run(stopCh chan struct{}) {
 	s.informers.Run(stopCh)
+}
+
+func (s *Storer) GetNodes(name string) (*metav1.Node, error) {
+	return s.listers.Nodes.Get(name)
+}
+
+func (s *Storer) ListNodes(selector labels.Selector) ([]*metav1.Node, error) {
+	return s.listers.Nodes.List(selector)
 }
 
 func (s *Storer) GetNamespace(name string) (*metav1.Namespace, error) {
@@ -143,6 +165,14 @@ func (s *Storer) GetIngress(namespace, name string) (*metanetworkv1.Ingress, err
 
 func (s *Storer) ListIngresses(namespace string, selector labels.Selector) ([]*metanetworkv1.Ingress, error) {
 	return s.listers.Ingresses.Ingresses(namespace).List(selector)
+}
+
+func (s *Storer) GetService(namespace, name string) (*metav1.Service, error) {
+	return s.listers.Services.Services(namespace).Get(name)
+}
+
+func (s *Storer) ListServices(namespace string, selector labels.Selector) ([]*metav1.Service, error) {
+	return s.listers.Services.Services(namespace).List(selector)
 }
 
 func (s *Storer) GetEndpoint(namespace, name string) (*metav1.Endpoints, error) {

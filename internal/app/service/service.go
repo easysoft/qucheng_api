@@ -6,8 +6,13 @@ package service
 
 import (
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service/app"
+	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service/node"
 )
 
-func Apps(clusterName, namespace string) *app.AppListManager {
+func Apps(clusterName, namespace string) *app.Manager {
 	return app.NewApps("primary", namespace)
+}
+
+func Nodes(clusterName string) *node.Manager {
+	return node.NewNodes("primary")
 }

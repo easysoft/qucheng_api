@@ -5,6 +5,7 @@
 package router
 
 import (
+	"fmt"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service/app"
 	"net/http"
 
@@ -129,7 +130,7 @@ func AppStatus(c *gin.Context) {
 	var (
 		err   error
 		query model.AppModel
-		app   *app.AppInstance
+		app   *app.Instance
 		data  *model.AppRespStatus
 	)
 	if err = c.ShouldBindQuery(&query); err != nil {
@@ -144,5 +145,18 @@ func AppStatus(c *gin.Context) {
 	}
 
 	data = app.ParseStatus()
+
+	/*
+		parse App Uri
+	*/
+	data.AccessHost = ""
+	nodePort := app.ParseNodePort()
+	if nodePort > 0 {
+		nodePortIPS := service.Nodes(query.Cluster).ListNodePortIPS()
+		if len(nodePortIPS) != 0 {
+			accessHost := fmt.Sprintf("%s:%d", nodePortIPS[0], nodePort)
+			data.AccessHost = accessHost
+		}
+	}
 	renderJson(c, http.StatusOK, data)
 }
