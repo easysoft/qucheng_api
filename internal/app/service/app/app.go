@@ -63,9 +63,10 @@ func (am *Manager) GetApp(name string) (*Instance, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(deployments) == 1 {
-		deploy := deployments[0]
-		app.componets.Add(component.NewDeployComponent(deploy, app.ks))
+	if len(deployments) >= 1 {
+		for _, d := range deployments {
+			app.componets.Add(component.NewDeployComponent(d, app.ks))
+		}
 	}
 
 	statefulsets, err := am.ks.Store.ListStatefulSets(am.namespace, selector)
@@ -73,9 +74,10 @@ func (am *Manager) GetApp(name string) (*Instance, error) {
 		return nil, err
 	}
 
-	if len(statefulsets) == 1 {
-		sts := statefulsets[0]
-		app.componets.Add(component.NewStatefulsetComponent(sts, app.ks))
+	if len(statefulsets) >= 1 {
+		for _, s := range statefulsets {
+			app.componets.Add(component.NewStatefulsetComponent(s, app.ks))
+		}
 	}
 
 	return app, nil

@@ -35,13 +35,13 @@ func Serve(ctx context.Context) error {
 
 	klog.Info("Setup cron tasks")
 	defer cron.Cron.Stop()
-	cron.Cron.Start()
 	cron.Cron.Add("0 */2 * * *", func() {
 		err = helm.RepoUpdate()
 		if err != nil {
 			klog.Warningf("cron helm repo update err: %v", err)
 		}
 	})
+	cron.Cron.Start()
 
 	klog.Info("Starting cne-api...")
 
