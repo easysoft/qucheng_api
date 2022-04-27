@@ -16,20 +16,21 @@ import (
 )
 
 func Config(r *gin.Engine) {
-	r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
-
-		// your custom format
-		return fmt.Sprintf(`time="%s" client=%s method=%s path=%s proto=%s status=%d cost=%s user-agent="%s" error="%s"`+"\n",
-			param.TimeStamp.Format(time.RFC3339),
-			param.ClientIP,
-			param.Method,
-			param.Path,
-			param.Request.Proto,
-			param.StatusCode,
-			param.Latency.String(),
-			param.Request.UserAgent(),
-			param.ErrorMessage,
-		)
+	r.Use(gin.LoggerWithConfig(gin.LoggerConfig{
+		SkipPaths: []string{"/health", "/metrics"},
+		Formatter: func(param gin.LogFormatterParams) string {
+			return fmt.Sprintf(`time="%s" client=%s method=%s path=%s proto=%s status=%d cost=%s user-agent="%s" error="%s"`+"\n",
+				param.TimeStamp.Format(time.RFC3339),
+				param.ClientIP,
+				param.Method,
+				param.Path,
+				param.Request.Proto,
+				param.StatusCode,
+				param.Latency.String(),
+				param.Request.UserAgent(),
+				param.ErrorMessage,
+			)
+		},
 	}))
 	r.GET("/ping", ping)
 	r.GET("/health", health)
