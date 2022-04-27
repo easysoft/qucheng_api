@@ -34,8 +34,9 @@ func Serve(ctx context.Context) error {
 	}
 
 	klog.Info("Setup cron tasks")
+	_ = helm.RepoUpdate()
 	defer cron.Cron.Stop()
-	cron.Cron.Add("0 */2 * * *", func() {
+	cron.Cron.Add("* * * * *", func() {
 		err = helm.RepoUpdate()
 		if err != nil {
 			klog.Warningf("cron helm repo update err: %v", err)
