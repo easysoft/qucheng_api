@@ -116,18 +116,25 @@ func (a *Instance) ParseStatus() *model.AppRespStatus {
 			Replicas:   c.Replicas(),
 			StatusCode: c.Status(),
 			Status:     constant.AppStatusMap[c.Status()],
+			Age:        c.Age(),
 		}
 		data.Components = append(data.Components, resC)
 	}
 
 	minStatusCode := data.Components[0].StatusCode
+	maxAge := data.Components[0].Age
 	for _, comp := range data.Components {
 		if comp.StatusCode < minStatusCode {
 			minStatusCode = comp.StatusCode
 		}
+
+		if comp.Age > maxAge {
+			maxAge = comp.Age
+		}
 	}
 
 	data.Status = constant.AppStatusMap[minStatusCode]
+	data.Age = maxAge
 	return data
 }
 

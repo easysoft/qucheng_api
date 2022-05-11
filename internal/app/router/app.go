@@ -6,8 +6,9 @@ package router
 
 import (
 	"fmt"
-	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service/app"
 	"net/http"
+
+	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service/app"
 
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service"
 
@@ -88,13 +89,13 @@ func AppStart(c *gin.Context) {
 		renderError(c, http.StatusBadRequest, err)
 		return
 	}
-	app, err := service.Apps(body.Cluster, body.Namespace).GetApp(body.Name)
+	a, err := service.Apps(body.Cluster, body.Namespace).GetApp(body.Name)
 	if err != nil {
 		renderError(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	err = app.Start(body.Chart)
+	err = a.Start(body.Chart)
 	if err != nil {
 		renderError(c, http.StatusInternalServerError, err)
 		return
@@ -112,13 +113,13 @@ func AppStop(c *gin.Context) {
 		return
 	}
 
-	app, err := service.Apps(body.Cluster, body.Namespace).GetApp(body.Name)
+	a, err := service.Apps(body.Cluster, body.Namespace).GetApp(body.Name)
 	if err != nil {
 		renderError(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	err = app.Stop(body.Chart)
+	err = a.Stop(body.Chart)
 	if err != nil {
 		renderError(c, http.StatusInternalServerError, err)
 		return

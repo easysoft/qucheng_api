@@ -2,6 +2,7 @@ package component
 
 import (
 	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/constant"
+	"time"
 
 	v1 "k8s.io/api/core/v1"
 )
@@ -36,4 +37,19 @@ func parseStatus(replicas, availableReplicas, updatedReplicas, readyReplicas int
 		}
 	}
 	return
+}
+
+func parseOldestAge(pods []*v1.Pod) int64 {
+	var (
+		nowUnix = time.Now().Unix()
+		oldest  = nowUnix
+	)
+	for _, pod := range pods {
+		podAge := pod.Status.StartTime.Unix()
+
+		if podAge-oldest < 0 {
+			oldest = podAge
+		}
+	}
+	return nowUnix - oldest
 }

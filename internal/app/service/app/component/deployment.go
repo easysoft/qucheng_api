@@ -35,6 +35,10 @@ func (d *Deployment) Replicas() int32 {
 	return d.object.Status.Replicas
 }
 
+func (d *Deployment) Age() int64 {
+	return parseOldestAge(d.getPods())
+}
+
 func (d *Deployment) Status() constant.AppStatusType {
 	status := d.object.Status
 	return parseStatus(status.Replicas, status.AvailableReplicas, status.UpdatedReplicas, status.ReadyReplicas, d.getPods())

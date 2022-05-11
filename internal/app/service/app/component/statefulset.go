@@ -36,6 +36,10 @@ func (s *Statefulset) Replicas() int32 {
 	return s.object.Status.Replicas
 }
 
+func (s *Statefulset) Age() int64 {
+	return parseOldestAge(s.getPods())
+}
+
 func (s *Statefulset) Status() constant.AppStatusType {
 	status := s.object.Status
 	return parseStatus(status.Replicas, status.AvailableReplicas, status.UpdatedReplicas, status.ReadyReplicas, s.getPods())

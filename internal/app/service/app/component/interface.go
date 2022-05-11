@@ -7,4 +7,5 @@ type Component interface {
 	Kind() string
 	Replicas() int32
 	Status() constant.AppStatusType
+	Age() int64
 }
