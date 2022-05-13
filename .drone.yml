@@ -37,6 +37,28 @@ steps:
       branch:
         - master
 
+  - name: 开发环境更新
+    image: ccr.ccs.tencentyun.com/easycorp/drone-plugin-kubectl
+    pull: always
+    settings:
+      debug: false
+      cmd: "kubectl rollout restart deploy/cne-api -n cne-system"
+      env: "dev"
+    when:
+      branch:
+        - mater
+
+  - name: 测试环境更新
+    image: ccr.ccs.tencentyun.com/easycorp/drone-plugin-kubectl
+    pull: always
+    settings:
+      debug: false
+      cmd: "kubectl rollout restart deploy/cne-api -n cne-system"
+      env: "pre"
+    when:
+      branch:
+        - test
+
 services:
   - name: docker daemon
     image: ccr.ccs.tencentyun.com/easycorp/drone-plugin-dockerd
