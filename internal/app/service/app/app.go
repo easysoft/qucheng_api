@@ -13,6 +13,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
+	"k8s.io/klog/v2"
 )
 
 type Manager struct {
@@ -34,7 +35,12 @@ func (am *Manager) Install(name string, body model.AppCreateModel) error {
 		return err
 	}
 
-	_, err = h.Install(name, defaultChartRepo+"/"+body.Chart)
+	var settings = make([]string, len(body.Settings))
+	for _, s := range body.Settings {
+		settings = append(settings, s.Key+"="+s.Val)
+	}
+	klog.Infoln(settings)
+	_, err = h.Install(name, defaultChartRepo+"/"+body.Chart, settings)
 	return err
 }
 

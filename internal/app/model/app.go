@@ -11,7 +11,13 @@ type AppModel struct {
 
 type AppCreateModel struct {
 	AppModel
-	Chart string `json:"chart" binding:"required"`
+	Chart    string          `json:"chart" binding:"required"`
+	Settings []stringSetting `json:"settings"`
+}
+
+type stringSetting struct {
+	Key string `json:"key"`
+	Val string `json:"value"`
 }
 
 type AppManageModel struct {

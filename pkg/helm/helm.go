@@ -44,7 +44,7 @@ func NamespaceScope(namespace string) (*HelmAction, error) {
 	return h, nil
 }
 
-func (h *HelmAction) Install(name, chart string) (*release.Release, error) {
+func (h *HelmAction) Install(name, chart string, settings []string) (*release.Release, error) {
 	client := action.NewInstall(h.actionConfig)
 
 	cp, err := client.ChartPathOptions.LocateChart(chart, h.settings)
@@ -57,7 +57,7 @@ func (h *HelmAction) Install(name, chart string) (*release.Release, error) {
 		return nil, err
 	}
 
-	valueOpts := &values.Options{}
+	valueOpts := &values.Options{StringValues: settings}
 
 	p := getter.All(h.settings)
 	vals, err := valueOpts.MergeValues(p)
