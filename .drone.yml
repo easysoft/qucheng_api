@@ -33,9 +33,6 @@ steps:
       purge: false
       no_cache: false
       dockerfile: "Dockerfile"
-    when:
-      branch:
-        - master
 
   - name: 开发环境更新
     image: ccr.ccs.tencentyun.com/easycorp/drone-plugin-kubectl
@@ -46,7 +43,7 @@ steps:
       env: "dev"
     when:
       branch:
-        - mater
+        - master
 
   - name: 测试环境更新
     image: ccr.ccs.tencentyun.com/easycorp/drone-plugin-kubectl
