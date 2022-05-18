@@ -90,21 +90,34 @@
                 },
                 "namespace": {
                     "type": "string"
+                },
+                "settings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.stringSetting"
+                    }
+                }
+            }
+        },
+        "model.stringSetting": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
                 }
             }
         },
         "router.response2xx": {
             "type": "object",
             "properties": {
-                "data": {
-                    "type": "object"
-                },
+                "data": {},
                 "message": {
                     "type": "string"
                 },
-                "pagination": {
-                    "type": "object"
-                },
+                "pagination": {},
                 "success": {
                     "type": "boolean"
                 }
@@ -113,15 +126,11 @@
         "router.response5xx": {
             "type": "object",
             "properties": {
-                "data": {
-                    "type": "object"
-                },
+                "data": {},
                 "message": {
                     "type": "string"
                 },
-                "pagination": {
-                    "type": "object"
-                },
+                "pagination": {},
                 "success": {
                     "type": "boolean",
                     "default": false

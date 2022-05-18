@@ -6,10 +6,11 @@ package helm
 
 import (
 	"context"
-	"github.com/pkg/errors"
-	"helm.sh/helm/v3/pkg/strvals"
 	"log"
 	"os"
+
+	"github.com/pkg/errors"
+	"helm.sh/helm/v3/pkg/strvals"
 
 	"github.com/imdario/mergo"
 

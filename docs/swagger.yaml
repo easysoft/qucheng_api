@@ -9,30 +9,37 @@ definitions:
         type: string
       namespace:
         type: string
+      settings:
+        items:
+          $ref: '#/definitions/model.stringSetting'
+        type: array
     required:
     - chart
     - name
     - namespace
     type: object
+  model.stringSetting:
+    properties:
+      key:
+        type: string
+      value:
+        type: string
+    type: object
   router.response2xx:
     properties:
-      data:
-        type: object
+      data: {}
       message:
         type: string
-      pagination:
-        type: object
+      pagination: {}
       success:
         type: boolean
     type: object
   router.response5xx:
     properties:
-      data:
-        type: object
+      data: {}
       message:
         type: string
-      pagination:
-        type: object
+      pagination: {}
       success:
         default: false
         type: boolean
