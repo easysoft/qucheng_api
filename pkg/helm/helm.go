@@ -6,6 +6,8 @@ package helm
 
 import (
 	"context"
+	"github.com/pkg/errors"
+	"helm.sh/helm/v3/pkg/strvals"
 	"log"
 	"os"
 
@@ -127,4 +129,14 @@ func (h *HelmAction) Upgrade(name string, chart string, chartValues map[string]i
 	ctx := context.Background()
 	rel, err := client.RunWithContext(ctx, name, chartRequested, vals)
 	return rel, err
+}
+
+func (h *HelmAction) PatchValues(dest map[string]interface{}, setvals []string) error {
+	for _, value := range setvals {
+		if err := strvals.ParseInto(value, dest); err != nil {
+			return errors.Wrap(err, "failed parsing --set data")
+		}
+	}
+
+	return nil
 }

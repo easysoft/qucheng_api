@@ -127,6 +127,30 @@ func AppStop(c *gin.Context) {
 	renderSuccess(c, http.StatusOK)
 }
 
+func AppPatchSettings(c *gin.Context) {
+	var (
+		err  error
+		body model.AppCreateModel
+	)
+	if err = c.ShouldBindJSON(&body); err != nil {
+		renderError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	a, err := service.Apps(body.Cluster, body.Namespace).GetApp(body.Name)
+	if err != nil {
+		renderError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	err = a.PatchSettings(body.Chart, body)
+	if err != nil {
+		renderError(c, http.StatusInternalServerError, err)
+		return
+	}
+	renderSuccess(c, http.StatusOK)
+}
+
 func AppStatus(c *gin.Context) {
 	var (
 		err   error
