@@ -42,4 +42,8 @@ func Config(r *gin.Engine) {
 	r.POST("/api/cne/app/stop", AppStop)
 	r.POST("/api/cne/app/settings", AppPatchSettings)
 	r.GET("/api/cne/app/status", AppStatus)
+
+	r.POST("/api/cne/namespace/create", NamespaceCreate)
+	r.POST("/api/cne/namespace/recycle", NamespaceRecycle)
+	r.GET("/api/cne/namespace", NamespaceGet)
 }
