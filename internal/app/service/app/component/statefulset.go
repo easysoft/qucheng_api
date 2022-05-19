@@ -17,8 +17,7 @@ type Statefulset struct {
 	kind   string
 	object *metaappsv1.StatefulSet
 
-	pods []*v1.Pod
-	ks   *cluster.Cluster
+	ks *cluster.Cluster
 }
 
 func NewStatefulsetComponent(obj *metaappsv1.StatefulSet, ks *cluster.Cluster) Component {

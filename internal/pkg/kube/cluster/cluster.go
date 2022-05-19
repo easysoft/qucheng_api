@@ -34,10 +34,7 @@ func (c *Cluster) IsPrimary() bool {
 
 func Exist(name string) bool {
 	_, ok := kubeClusters[name]
-	if ok {
-		return true
-	}
-	return false
+	return ok
 }
 
 func Get(name string) *Cluster {

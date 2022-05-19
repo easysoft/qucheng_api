@@ -7,9 +7,10 @@ package mysql
 import (
 	"database/sql"
 	"fmt"
-	"k8s.io/klog/v2"
 	"strings"
 	"time"
+
+	"k8s.io/klog/v2"
 
 	"github.com/ergoapi/util/exstr"
 	_ "github.com/go-sql-driver/mysql"

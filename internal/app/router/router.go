@@ -6,6 +6,7 @@ package router
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -32,6 +33,7 @@ func Config(r *gin.Engine) {
 			)
 		},
 	}))
+	r.Use(gin.Recovery())
 	r.GET("/ping", ping)
 	r.GET("/health", health)
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
@@ -49,4 +51,13 @@ func Config(r *gin.Engine) {
 
 	r.POST("/api/cne/middleware/install", MiddlewareInstall)
 	r.POST("/api/cne/middleware/uninstall", MiddleWareUninstall)
+
+	r.NoMethod(func(c *gin.Context) {
+		msg := fmt.Sprintf("not found: %v", c.Request.Method)
+		renderMessage(c, http.StatusBadRequest, msg)
+	})
+	r.NoRoute(func(c *gin.Context) {
+		msg := fmt.Sprintf("not found: %v", c.Request.URL.Path)
+		renderMessage(c, http.StatusBadRequest, msg)
+	})
 }

@@ -23,6 +23,14 @@ func renderError(c *gin.Context, code int, err error) {
 	})
 }
 
+func renderMessage(c *gin.Context, code int, message string) {
+	c.JSON(code, gin.H{
+		"code":      code,
+		"message":   message,
+		"timestamp": time.Now().Unix(),
+	})
+}
+
 func renderSuccess(c *gin.Context, code int) {
 	c.JSON(code, gin.H{
 		"code":      200,

@@ -16,7 +16,6 @@ type Deployment struct {
 	name   string
 	kind   string
 	object *metaappsv1.Deployment
-	pods   []*v1.Pod
 	ks     *cluster.Cluster
 }
 

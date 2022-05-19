@@ -13,6 +13,19 @@ import (
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service"
 )
 
+// NamespaceCreate 创建命名空间
+// @Summary 创建命名空间
+// @Tags 命名空间
+// @Description 创建命名空间
+// @Accept json
+// @Produce json
+// @Param Authorization header string false "jwtToken"
+// @Param X-Auth-Token header string false "staticToken"
+// @Security ApiKeyAuth
+// @Param body body model.NamespaceBase true "meta"
+// @Success 201 {object} response2xx
+// @Failure 500 {object} response5xx
+// @Router /api/cne/namespace/create [post]
 func NamespaceCreate(c *gin.Context) {
 	var (
 		err  error
@@ -32,6 +45,19 @@ func NamespaceCreate(c *gin.Context) {
 	renderSuccess(c, http.StatusOK)
 }
 
+// NamespaceRecycle 删除命名空间
+// @Summary 删除命名空间
+// @Tags 命名空间
+// @Description 删除命名空间
+// @Accept json
+// @Produce json
+// @Param Authorization header string false "jwtToken"
+// @Param X-Auth-Token header string false "staticToken"
+// @Security ApiKeyAuth
+// @Param body body model.NamespaceBase true "meta"
+// @Success 201 {object} response2xx
+// @Failure 500 {object} response5xx
+// @Router /api/cne/namespace/recycle [post]
 func NamespaceRecycle(c *gin.Context) {
 	var (
 		err  error
@@ -51,6 +77,19 @@ func NamespaceRecycle(c *gin.Context) {
 	renderSuccess(c, http.StatusOK)
 }
 
+// NamespaceGet 查询命名空间
+// @Summary 查询命名空间
+// @Tags 命名空间
+// @Description 查询命名空间
+// @Accept multipart/form-data
+// @Produce json
+// @Param Authorization header string false "jwtToken"
+// @Param X-Auth-Token header string false "staticToken"
+// @Security ApiKeyAuth
+// @Param body query model.NamespaceBase true "meta"
+// @Success 201 {object} response2xx
+// @Failure 500 {object} response5xx
+// @Router /api/cne/namespace [get]
 func NamespaceGet(c *gin.Context) {
 	var (
 		err  error

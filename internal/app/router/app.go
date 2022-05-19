@@ -55,6 +55,19 @@ func AppInstall(c *gin.Context) {
 	renderSuccess(c, http.StatusCreated)
 }
 
+// AppUnInstall 卸载接口
+// @Summary 卸载接口
+// @Tags 应用管理
+// @Description 卸载接口
+// @Accept json
+// @Produce json
+// @Param Authorization header string false "jwtToken"
+// @Param X-Auth-Token header string false "staticToken"
+// @Security ApiKeyAuth
+// @Param body body model.AppModel true "meta"
+// @Success 201 {object} response2xx
+// @Failure 500 {object} response5xx
+// @Router /api/cne/app/uninstall [post]
 func AppUnInstall(c *gin.Context) {
 	var (
 		err  error
@@ -79,6 +92,19 @@ func AppUnInstall(c *gin.Context) {
 	renderSuccess(c, http.StatusOK)
 }
 
+// AppStart 启动应用
+// @Summary 启动应用
+// @Tags 应用管理
+// @Description 启动应用
+// @Accept json
+// @Produce json
+// @Param Authorization header string false "jwtToken"
+// @Param X-Auth-Token header string false "staticToken"
+// @Security ApiKeyAuth
+// @Param body body model.AppManageModel true "meta"
+// @Success 201 {object} response2xx
+// @Failure 500 {object} response5xx
+// @Router /api/cne/app/start [post]
 func AppStart(c *gin.Context) {
 	var (
 		err  error
@@ -103,6 +129,19 @@ func AppStart(c *gin.Context) {
 	renderSuccess(c, http.StatusOK)
 }
 
+// AppStop 关闭应用
+// @Summary 关闭应用
+// @Tags 应用管理
+// @Description 关闭应用
+// @Accept json
+// @Produce json
+// @Param Authorization header string false "jwtToken"
+// @Param X-Auth-Token header string false "staticToken"
+// @Security ApiKeyAuth
+// @Param body body model.AppManageModel true "meta"
+// @Success 201 {object} response2xx
+// @Failure 500 {object} response5xx
+// @Router /api/cne/app/stop [post]
 func AppStop(c *gin.Context) {
 	var (
 		err  error
@@ -127,6 +166,19 @@ func AppStop(c *gin.Context) {
 	renderSuccess(c, http.StatusOK)
 }
 
+// AppStop 设置应用
+// @Summary 设置应用
+// @Tags 应用管理
+// @Description 设置应用
+// @Accept json
+// @Produce json
+// @Param Authorization header string false "jwtToken"
+// @Param X-Auth-Token header string false "staticToken"
+// @Security ApiKeyAuth
+// @Param body body model.AppCreateModel true "meta"
+// @Success 201 {object} response2xx
+// @Failure 500 {object} response5xx
+// @Router /api/cne/app/settings [post]
 func AppPatchSettings(c *gin.Context) {
 	var (
 		err  error
@@ -151,6 +203,19 @@ func AppPatchSettings(c *gin.Context) {
 	renderSuccess(c, http.StatusOK)
 }
 
+// AppStatus 应用状态
+// @Summary 应用状态
+// @Tags 应用管理
+// @Description 应用状态
+// @Accept json
+// @Produce json
+// @Param Authorization header string false "jwtToken"
+// @Param X-Auth-Token header string false "staticToken"
+// @Security ApiKeyAuth
+// @Param body query model.AppModel true "meta"
+// @Success 201 {object} response2xx
+// @Failure 500 {object} response5xx
+// @Router /api/cne/app/status [get]
 func AppStatus(c *gin.Context) {
 	var (
 		err   error
