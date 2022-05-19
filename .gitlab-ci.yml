@@ -18,8 +18,8 @@ workflow:
 stages:
   - gentag
   - build
-  - tag
-  - push
+#  - tag
+#  - push
 
 gentag-branch:
   stage: gentag
