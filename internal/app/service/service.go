@@ -6,6 +6,7 @@ package service
 
 import (
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service/app"
+	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service/middleware"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service/namespace"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service/node"
 )
@@ -20,4 +21,8 @@ func Nodes(clusterName string) *node.Manager {
 
 func Namespaces(clusterName string) *namespace.Manager {
 	return namespace.NewNamespaces("primary")
+}
+
+func Middlewares() *middleware.Manager {
+	return middleware.New()
 }

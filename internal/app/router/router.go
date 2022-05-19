@@ -46,4 +46,7 @@ func Config(r *gin.Engine) {
 	r.POST("/api/cne/namespace/create", NamespaceCreate)
 	r.POST("/api/cne/namespace/recycle", NamespaceRecycle)
 	r.GET("/api/cne/namespace", NamespaceGet)
+
+	r.POST("/api/cne/middleware/install", MiddlewareInstall)
+	r.POST("/api/cne/middleware/uninstall", MiddleWareUninstall)
 }
