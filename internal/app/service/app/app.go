@@ -40,7 +40,7 @@ func (am *Manager) Install(name string, body model.AppCreateModel) error {
 		settings = append(settings, s.Key+"="+s.Val)
 	}
 	klog.Infoln(settings)
-	_, err = h.Install(name, defaultChartRepo+"/"+body.Chart, settings)
+	_, err = h.Install(name, genRepo(body.Channel)+"/"+body.Chart, settings)
 	return err
 }
 

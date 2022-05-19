@@ -10,7 +10,7 @@ import (
 	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm"
 )
 
-func (a *Instance) Stop(chart string) error {
+func (a *Instance) Stop(chart, channel string) error {
 	h, _ := helm.NamespaceScope(a.namespace)
 	vals, err := h.GetValues(a.name)
 	if err != nil {
@@ -27,11 +27,11 @@ func (a *Instance) Stop(chart string) error {
 		return err
 	}
 
-	_, err = h.Upgrade(a.name, defaultChartRepo+"/"+chart, vals)
+	_, err = h.Upgrade(a.name, genRepo(channel)+"/"+chart, vals)
 	return err
 }
 
-func (a *Instance) Start(chart string) error {
+func (a *Instance) Start(chart, channel string) error {
 	h, _ := helm.NamespaceScope(a.namespace)
 	vals, err := h.GetValues(a.name)
 	if err != nil {
@@ -45,7 +45,7 @@ func (a *Instance) Start(chart string) error {
 		vals["global"] = globalVals
 	}
 
-	_, err = h.Upgrade(a.name, defaultChartRepo+"/"+chart, vals)
+	_, err = h.Upgrade(a.name, genRepo(channel)+"/"+chart, vals)
 	return err
 }
 
@@ -74,6 +74,14 @@ func (a *Instance) PatchSettings(chart string, body model.AppCreateModel) error 
 		return err
 	}
 
-	_, err = h.Upgrade(a.name, defaultChartRepo+"/"+chart, vals)
+	_, err = h.Upgrade(a.name, genRepo(body.Channel)+"/"+chart, vals)
 	return err
+}
+
+func genRepo(channel string) string {
+	c := "test"
+	if channel != "" {
+		c = channel
+	}
+	return "qucheng-" + c
 }

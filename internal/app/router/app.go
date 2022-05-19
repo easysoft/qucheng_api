@@ -122,7 +122,7 @@ func AppStart(c *gin.Context) {
 		return
 	}
 
-	err = a.Start(body.Chart)
+	err = a.Start(body.Chart, body.Channel)
 	if err != nil {
 		renderError(c, http.StatusInternalServerError, err)
 		return
@@ -159,7 +159,7 @@ func AppStop(c *gin.Context) {
 		return
 	}
 
-	err = a.Stop(body.Chart)
+	err = a.Stop(body.Chart, body.Channel)
 	if err != nil {
 		renderError(c, http.StatusInternalServerError, err)
 		return
