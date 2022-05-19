@@ -11,6 +11,7 @@ type AppModel struct {
 
 type AppCreateModel struct {
 	AppModel
+	Channel  string          `json:"channel"`
 	Chart    string          `json:"chart" binding:"required"`
 	Settings []stringSetting `json:"settings"`
 }
@@ -22,5 +23,6 @@ type stringSetting struct {
 
 type AppManageModel struct {
 	AppModel
-	Chart string `json:"chart" binding:"required"`
+	Channel string `json:"channel"`
+	Chart   string `json:"chart" binding:"required"`
 }

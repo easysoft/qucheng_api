@@ -44,7 +44,6 @@ func (mm *MysqlManager) CreateDB(body *model.Middleware) (interface{}, error) {
 
 	data := DBConfig{
 		Name: body.Name,
-		Dsn:  dsn,
 	}
 	data.Host = c.Host
 	data.Port = c.Port
