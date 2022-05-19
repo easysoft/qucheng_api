@@ -6,6 +6,7 @@ package router
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"net/http"
 
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service/app"
@@ -231,6 +232,11 @@ func AppStatus(c *gin.Context) {
 	app, err = service.Apps(query.Cluster, query.Namespace).GetApp(query.Name)
 	if err != nil {
 		renderError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	if len(app.Components().Items()) == 0 {
+		renderError(c, http.StatusNotFound, errors.New("app not found"))
 		return
 	}
 

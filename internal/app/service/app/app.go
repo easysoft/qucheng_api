@@ -56,7 +56,7 @@ func (am *Manager) UnInstall(name string) error {
 
 func (am *Manager) GetApp(name string) (*Instance, error) {
 	app := newApp(am, name)
-	app.componets = component.NewComponents()
+	app.components = component.NewComponents()
 
 	selector := labels.NewSelector()
 	label1, _ := labels.NewRequirement("app.kubernetes.io/managed-by", selection.Equals, []string{"Helm"})
@@ -71,7 +71,7 @@ func (am *Manager) GetApp(name string) (*Instance, error) {
 	}
 	if len(deployments) >= 1 {
 		for _, d := range deployments {
-			app.componets.Add(component.NewDeployComponent(d, app.ks))
+			app.components.Add(component.NewDeployComponent(d, app.ks))
 		}
 	}
 
@@ -82,7 +82,7 @@ func (am *Manager) GetApp(name string) (*Instance, error) {
 
 	if len(statefulsets) >= 1 {
 		for _, s := range statefulsets {
-			app.componets.Add(component.NewStatefulsetComponent(s, app.ks))
+			app.components.Add(component.NewStatefulsetComponent(s, app.ks))
 		}
 	}
 
@@ -94,8 +94,8 @@ type Instance struct {
 	namespace   string
 	name        string
 
-	selector  labels.Selector
-	componets *component.Components
+	selector   labels.Selector
+	components *component.Components
 
 	ks *cluster.Cluster
 }
@@ -111,11 +111,22 @@ func (a *Instance) getServices() ([]*v1.Service, error) {
 	return a.ks.Store.ListServices(a.namespace, a.selector)
 }
 
+func (a *Instance) Components() *component.Components {
+	return a.components
+}
+
 func (a *Instance) ParseStatus() *model.AppRespStatus {
 	data := &model.AppRespStatus{
 		Components: make([]model.AppRespStatusComponent, 0),
+		Status:     constant.AppStatusMap[constant.AppStatusUnknown],
+		Age:        0,
 	}
-	for _, c := range a.componets.Items() {
+
+	if len(a.components.Items()) == 0 {
+		return data
+	}
+
+	for _, c := range a.components.Items() {
 		resC := model.AppRespStatusComponent{
 			Name:       c.Name(),
 			Kind:       c.Kind(),
