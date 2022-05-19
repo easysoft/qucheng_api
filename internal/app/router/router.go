@@ -17,6 +17,7 @@ import (
 )
 
 func Config(r *gin.Engine) {
+	r.Use(Cors())
 	r.Use(gin.LoggerWithConfig(gin.LoggerConfig{
 		SkipPaths: []string{"/health", "/metrics"},
 		Formatter: func(param gin.LogFormatterParams) string {
@@ -38,19 +39,22 @@ func Config(r *gin.Engine) {
 	r.GET("/health", health)
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	r.POST("/api/cne/app/install", AppInstall)
-	r.POST("/api/cne/app/uninstall", AppUnInstall)
-	r.POST("/api/cne/app/start", AppStart)
-	r.POST("/api/cne/app/stop", AppStop)
-	r.POST("/api/cne/app/settings", AppPatchSettings)
-	r.GET("/api/cne/app/status", AppStatus)
+	api := r.Group("/api/cne", Auth())
+	{
+		api.POST("/app/install", AppInstall)
+		api.POST("/app/uninstall", AppUnInstall)
+		api.POST("/app/start", AppStart)
+		api.POST("/app/stop", AppStop)
+		api.POST("/app/settings", AppPatchSettings)
+		api.GET("/app/status", AppStatus)
 
-	r.POST("/api/cne/namespace/create", NamespaceCreate)
-	r.POST("/api/cne/namespace/recycle", NamespaceRecycle)
-	r.GET("/api/cne/namespace", NamespaceGet)
+		api.POST("/namespace/create", NamespaceCreate)
+		api.POST("/namespace/recycle", NamespaceRecycle)
+		api.GET("/namespace", NamespaceGet)
 
-	r.POST("/api/cne/middleware/install", MiddlewareInstall)
-	r.POST("/api/cne/middleware/uninstall", MiddleWareUninstall)
+		api.POST("/middleware/install", MiddlewareInstall)
+		api.POST("/middleware/uninstall", MiddleWareUninstall)
+	}
 
 	r.NoMethod(func(c *gin.Context) {
 		msg := fmt.Sprintf("not found: %v", c.Request.Method)

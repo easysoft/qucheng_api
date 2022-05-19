@@ -6,4 +6,5 @@ package constant
 
 const (
 	ServicePortWeb = "web"
+	Token          = "X-Auth-Token"
 )
