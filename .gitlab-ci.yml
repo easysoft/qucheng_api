@@ -46,7 +46,7 @@ gentag-tags:
 build:
   stage: build
   script:
-    - docker buildx build --pull --push --platform linux/amd64 -t hub.qucheng.com/platform/cne-api:${BUILD_TAG} -f docker/Dockerfile .
+    - docker buildx build --pull --push --platform linux/amd64 -t hub.qucheng.com/platform/cne-api:${BUILD_TAG} .
   after_script:
     - echo "clean build"
 
