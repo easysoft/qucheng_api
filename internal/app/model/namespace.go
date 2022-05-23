@@ -6,5 +6,5 @@ package model
 
 type NamespaceBase struct {
 	QueryCluster
-	Name string `form:"name" json:"name" binding:"required"`
+	Name string `form:"name" json:"name" binding:"required,namespace_exist=Cluster"`
 }

@@ -6,17 +6,66 @@ package router
 
 import (
 	"fmt"
+	"github.com/go-playground/locales/en"
+	ut "github.com/go-playground/universal-translator"
+	enTranslations "github.com/go-playground/validator/v10/translations/en"
+	"gitlab.zcorp.cc/pangu/cne-api/internal/app/model/translation"
 	"net/http"
 	"time"
 
+	_ "gitlab.zcorp.cc/pangu/cne-api/docs"
+	"gitlab.zcorp.cc/pangu/cne-api/internal/app/model/field"
+
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
-	_ "gitlab.zcorp.cc/pangu/cne-api/docs"
+	"k8s.io/klog/v2"
 )
 
+var trans ut.Translator
+
+func initTrans(v *validator.Validate) (err error) {
+	enT := en.New()
+	uni := ut.New(enT, enT)
+
+	var (
+		ok    bool
+		local = "en"
+	)
+
+	trans, ok = uni.GetTranslator(local)
+	if !ok {
+		return fmt.Errorf("uni.GetTranslator(%s) failed", local)
+	}
+
+	if err = enTranslations.RegisterDefaultTranslations(v, trans); err != nil {
+		return
+	}
+	if err = translation.RegisterCustomENTranslations(v, trans); err != nil {
+		return
+	}
+	return
+}
+
 func Config(r *gin.Engine) {
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		var err error
+		for k, f := range field.New() {
+			if err = v.RegisterValidation(k, f); err != nil {
+				klog.ErrorS(err, "register validation failed", "name", k)
+			} else {
+				klog.InfoS("register validation successful", "name", k)
+			}
+		}
+
+		if err = initTrans(v); err != nil {
+			klog.ErrorS(err, "setup translate failed")
+		}
+	}
+
 	r.Use(Cors())
 	r.Use(gin.LoggerWithConfig(gin.LoggerConfig{
 		SkipPaths: []string{"/health", "/metrics"},

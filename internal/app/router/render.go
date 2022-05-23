@@ -5,6 +5,8 @@
 package router
 
 import (
+	"github.com/go-playground/validator/v10"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -16,9 +18,18 @@ const (
 
 func renderError(c *gin.Context, code int, err error) {
 	_ = c.Error(err)
+	errMsg := err.Error()
+	errs, ok := err.(validator.ValidationErrors)
+	if ok {
+		errlist := make([]string, 0, len(errs))
+		for _, e := range errs {
+			errlist = append(errlist, e.Translate(trans))
+		}
+		errMsg = strings.Join(errlist, ";")
+	}
 	c.JSON(code, gin.H{
 		"code":      code,
-		"message":   err.Error(),
+		"message":   errMsg,
 		"timestamp": time.Now().Unix(),
 	})
 }

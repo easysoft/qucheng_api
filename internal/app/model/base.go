@@ -5,10 +5,10 @@
 package model
 
 type QueryCluster struct {
-	Cluster string `form:"cluster" json:"cluster"`
+	Cluster string `form:"cluster,default=primary" json:"cluster,default=primary"`
 }
 
 type QueryNamespace struct {
 	QueryCluster
-	Namespace string `form:"namespace" json:"namespace" binding:"required"`
+	Namespace string `form:"namespace" json:"namespace" binding:"required,namespace_exist=Cluster"`
 }
