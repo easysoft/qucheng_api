@@ -6,7 +6,6 @@ package namespace
 
 import (
 	"context"
-
 	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/kube/cluster"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,7 +26,7 @@ func NewNamespaces(clusterName string) *Manager {
 func (m *Manager) Create(name string) error {
 	newNS := &v1.Namespace{ObjectMeta: metav1.ObjectMeta{
 		Name:        name,
-		Labels:      map[string]string{},
+		Labels:      map[string]string{labelCreatedBy: labelValueOwner},
 		Annotations: map[string]string{},
 	}}
 
@@ -45,4 +44,9 @@ func (m *Manager) Recycle(name string) error {
 func (m *Manager) Has(name string) bool {
 	_, err := m.ks.Clients.Base.CoreV1().Namespaces().Get(context.TODO(), name, metav1.GetOptions{})
 	return err == nil
+}
+
+func (m *Manager) Get(name string) *Instance {
+	ns, _ := m.ks.Clients.Base.CoreV1().Namespaces().Get(context.TODO(), name, metav1.GetOptions{})
+	return newInstance(ns)
 }

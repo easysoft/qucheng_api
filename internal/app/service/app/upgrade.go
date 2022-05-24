@@ -10,9 +10,9 @@ import (
 	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm"
 )
 
-func (a *Instance) Stop(chart, channel string) error {
-	h, _ := helm.NamespaceScope(a.namespace)
-	vals, err := h.GetValues(a.name)
+func (i *Instance) Stop(chart, channel string) error {
+	h, _ := helm.NamespaceScope(i.namespace)
+	vals, err := h.GetValues(i.name)
 	if err != nil {
 		return err
 	}
@@ -27,13 +27,13 @@ func (a *Instance) Stop(chart, channel string) error {
 		return err
 	}
 
-	_, err = h.Upgrade(a.name, genRepo(channel)+"/"+chart, vals)
+	_, err = h.Upgrade(i.name, genChart(channel, chart), vals)
 	return err
 }
 
-func (a *Instance) Start(chart, channel string) error {
-	h, _ := helm.NamespaceScope(a.namespace)
-	vals, err := h.GetValues(a.name)
+func (i *Instance) Start(chart, channel string) error {
+	h, _ := helm.NamespaceScope(i.namespace)
+	vals, err := h.GetValues(i.name)
 	if err != nil {
 		return err
 	}
@@ -45,18 +45,18 @@ func (a *Instance) Start(chart, channel string) error {
 		vals["global"] = globalVals
 	}
 
-	_, err = h.Upgrade(a.name, genRepo(channel)+"/"+chart, vals)
+	_, err = h.Upgrade(i.name, genChart(channel, chart), vals)
 	return err
 }
 
-func (a *Instance) PatchSettings(chart string, body model.AppCreateModel) error {
+func (i *Instance) PatchSettings(chart string, body model.AppCreateModel) error {
 	var (
 		err  error
 		vals map[string]interface{}
 	)
 
-	h, _ := helm.NamespaceScope(a.namespace)
-	vals, err = h.GetValues(a.name)
+	h, _ := helm.NamespaceScope(i.namespace)
+	vals, err = h.GetValues(i.name)
 	if err != nil {
 		return err
 	}
@@ -74,7 +74,7 @@ func (a *Instance) PatchSettings(chart string, body model.AppCreateModel) error 
 		return err
 	}
 
-	_, err = h.Upgrade(a.name, genRepo(body.Channel)+"/"+chart, vals)
+	_, err = h.Upgrade(i.name, genChart(body.Channel, chart), vals)
 	return err
 }
 
@@ -84,4 +84,8 @@ func genRepo(channel string) string {
 		c = channel
 	}
 	return "qucheng-" + c
+}
+
+func genChart(channel, chart string) string {
+	return genRepo(channel) + "/" + chart
 }

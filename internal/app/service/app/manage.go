@@ -6,11 +6,10 @@ package app
 
 import (
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/model"
+	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service/app/component"
-	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/constant"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/kube/cluster"
 	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/klog/v2"
@@ -39,8 +38,8 @@ func (am *Manager) Install(name string, body model.AppCreateModel) error {
 	for _, s := range body.Settings {
 		settings = append(settings, s.Key+"="+s.Val)
 	}
-	klog.Infoln(settings)
-	_, err = h.Install(name, genRepo(body.Channel)+"/"+body.Chart, settings)
+	klog.InfoS("build install settings", "namespace", am.namespace, "name", name, "settings", settings)
+	_, err = h.Install(name, genChart(body.Channel, body.Chart), settings)
 	return err
 }
 
@@ -86,96 +85,9 @@ func (am *Manager) GetApp(name string) (*Instance, error) {
 		}
 	}
 
+	if len(app.Components().Items()) == 0 {
+		return nil, &service.ErrAppNotFound{Name: app.name}
+	}
+
 	return app, nil
-}
-
-type Instance struct {
-	clusterName string
-	namespace   string
-	name        string
-
-	selector   labels.Selector
-	components *component.Components
-
-	ks *cluster.Cluster
-}
-
-func newApp(am *Manager, name string) *Instance {
-	return &Instance{
-		clusterName: am.clusterName, namespace: am.namespace, name: name,
-		ks: am.ks,
-	}
-}
-
-func (a *Instance) getServices() ([]*v1.Service, error) {
-	return a.ks.Store.ListServices(a.namespace, a.selector)
-}
-
-func (a *Instance) Components() *component.Components {
-	return a.components
-}
-
-func (a *Instance) ParseStatus() *model.AppRespStatus {
-	data := &model.AppRespStatus{
-		Components: make([]model.AppRespStatusComponent, 0),
-		Status:     constant.AppStatusMap[constant.AppStatusUnknown],
-		Age:        0,
-	}
-
-	if len(a.components.Items()) == 0 {
-		return data
-	}
-
-	for _, c := range a.components.Items() {
-		resC := model.AppRespStatusComponent{
-			Name:       c.Name(),
-			Kind:       c.Kind(),
-			Replicas:   c.Replicas(),
-			StatusCode: c.Status(),
-			Status:     constant.AppStatusMap[c.Status()],
-			Age:        c.Age(),
-		}
-		data.Components = append(data.Components, resC)
-	}
-
-	minStatusCode := data.Components[0].StatusCode
-	maxAge := data.Components[0].Age
-	for _, comp := range data.Components {
-		if comp.StatusCode < minStatusCode {
-			minStatusCode = comp.StatusCode
-		}
-
-		if comp.Age > maxAge {
-			maxAge = comp.Age
-		}
-	}
-
-	data.Status = constant.AppStatusMap[minStatusCode]
-	data.Age = maxAge
-	return data
-}
-
-func (a *Instance) ParseNodePort() int32 {
-	var nodePort int32 = 0
-	services, err := a.getServices()
-	if err != nil {
-		return nodePort
-	}
-
-	for _, s := range services {
-		if s.Spec.Type == v1.ServiceTypeNodePort {
-			for _, p := range s.Spec.Ports {
-				if p.Name == constant.ServicePortWeb {
-					nodePort = p.NodePort
-					break
-				}
-			}
-		}
-	}
-
-	return nodePort
-}
-
-func (a *Instance) Settings() *Settings {
-	return newSettings(a)
 }

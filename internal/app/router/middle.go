@@ -5,6 +5,7 @@
 package router
 
 import (
+	"k8s.io/klog/v2"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -38,10 +39,12 @@ func MiddlewareInstall(c *gin.Context) {
 	}
 
 	if res, err = service.Middlewares().Mysql().CreateDB(&body); err != nil {
+		klog.ErrorS(err, "create mysql db failed", "name", body.Name)
 		renderError(c, http.StatusInternalServerError, err)
 		return
 	}
 
+	klog.InfoS("create mysql db successful", "name", body.Name)
 	renderJson(c, http.StatusOK, res)
 }
 
@@ -71,9 +74,11 @@ func MiddleWareUninstall(c *gin.Context) {
 	}
 
 	if err = service.Middlewares().Mysql().RecycleDB(&body); err != nil {
+		klog.ErrorS(err, "recycle mysql db failed", "name", body.Name)
 		renderError(c, http.StatusInternalServerError, err)
 		return
 	}
 
+	klog.InfoS("recycle mysql db successful", "name", body.Name)
 	renderSuccess(c, http.StatusOK)
 }

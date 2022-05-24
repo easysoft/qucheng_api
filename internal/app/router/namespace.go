@@ -5,6 +5,7 @@
 package router
 
 import (
+	"k8s.io/klog/v2"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -38,10 +39,12 @@ func NamespaceCreate(c *gin.Context) {
 	}
 
 	if err = service.Namespaces(body.Cluster).Create(body.Name); err != nil {
+		klog.ErrorS(err, "create namespace failed", "name", body.Name)
 		renderError(c, http.StatusInternalServerError, err)
 		return
 	}
 
+	klog.InfoS("create namespace successful", "name", body.Name)
 	renderSuccess(c, http.StatusOK)
 }
 
@@ -70,10 +73,12 @@ func NamespaceRecycle(c *gin.Context) {
 	}
 
 	if err = service.Namespaces(body.Cluster).Recycle(body.Name); err != nil {
+		klog.ErrorS(err, "recycle namespace failed", "name", body.Name)
 		renderError(c, http.StatusInternalServerError, err)
 		return
 	}
 
+	klog.InfoS("recycle namespace successful", "name", body.Name)
 	renderSuccess(c, http.StatusOK)
 }
 

@@ -24,13 +24,13 @@ func NewNodes(clusterName string) *Manager {
 	}
 }
 
-func (m *Manager) filteNodes(selector labels.Selector) ([]*v1.Node, error) {
+func (m *Manager) filterNodes(selector labels.Selector) ([]*v1.Node, error) {
 	return m.ks.Store.ListNodes(selector)
 }
 
 func (m *Manager) ListNodePortIPS() []string {
 	ips := make([]string, 0)
-	nodes, err := m.filteNodes(labels.NewSelector())
+	nodes, err := m.filterNodes(labels.NewSelector())
 	if err != nil {
 		return ips
 	}

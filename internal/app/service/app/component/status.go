@@ -17,7 +17,7 @@ func parseStatus(replicas, availableReplicas, updatedReplicas, readyReplicas int
 
 	appStatus = constant.AppStatusUnknown
 	if replicas == 0 {
-		appStatus = constant.AppStatusStoped
+		appStatus = constant.AppStatusStopped
 		return
 	}
 
