@@ -26,3 +26,8 @@ type AppManageModel struct {
 	Channel string `json:"channel"`
 	Chart   string `json:"chart" binding:"required"`
 }
+
+type AppSettingMode struct {
+	AppModel
+	Mode string `form:"mode" binding:"oneof=list map"`
+}

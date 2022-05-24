@@ -7,6 +7,9 @@ package router
 import (
 	"fmt"
 	"github.com/pkg/errors"
+	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm"
+	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm/form"
+	"gopkg.in/yaml.v3"
 	"net/http"
 
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service/app"
@@ -255,4 +258,53 @@ func AppStatus(c *gin.Context) {
 		}
 	}
 	renderJson(c, http.StatusOK, data)
+}
+
+func AppSimpleSettings(c *gin.Context) {
+	var (
+		err   error
+		query model.AppSettingMode
+		app   *app.Instance
+	)
+
+	if err = c.ShouldBindQuery(&query); err != nil {
+		renderError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	app, err = service.Apps(query.Cluster, query.Namespace).GetApp(query.Name)
+	if err != nil {
+		renderError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	settings, err := app.Settings().Simple().Mode(query.Mode).Parse()
+	if err != nil {
+		renderError(c, http.StatusInternalServerError, err)
+		return
+	}
+	renderJson(c, http.StatusOK, settings)
+}
+
+func AppTest(c *gin.Context) {
+	ch, err := helm.GetChart("qucheng-test/cne-market-api")
+	if err != nil {
+		renderError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	fmt.Println(helm.ParseValues(ch.Values))
+	var dynForm form.DynamicForm
+	for _, f := range ch.Files {
+		if f.Name == "form.yaml" {
+			err = yaml.Unmarshal(f.Data, &dynForm)
+			if err != nil {
+				klog.ErrorS(err, "parse dynform failed")
+				renderError(c, http.StatusInternalServerError, errors.New("parse dynform failed"))
+				return
+			}
+		}
+	}
+	fmt.Println(dynForm)
+	renderSuccess(c, 200)
 }

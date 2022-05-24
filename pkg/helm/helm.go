@@ -6,6 +6,8 @@ package helm
 
 import (
 	"context"
+	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm/form"
+	"gopkg.in/yaml.v3"
 	"log"
 	"os"
 
@@ -15,6 +17,7 @@ import (
 	"github.com/imdario/mergo"
 
 	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/cli/values"
@@ -22,19 +25,19 @@ import (
 	"helm.sh/helm/v3/pkg/release"
 )
 
-type HelmAction struct {
+type Action struct {
 	actionConfig *action.Configuration
 	settings     *cli.EnvSettings
 	namespace    string
 }
 
-func newAction(settings *cli.EnvSettings, config *action.Configuration) *HelmAction {
-	return &HelmAction{
+func newAction(settings *cli.EnvSettings, config *action.Configuration) *Action {
+	return &Action{
 		settings: settings, actionConfig: config,
 	}
 }
 
-func NamespaceScope(namespace string) (*HelmAction, error) {
+func NamespaceScope(namespace string) (*Action, error) {
 	settings := cli.New()
 	settings.SetNamespace(namespace)
 	actionConfig := &action.Configuration{}
@@ -47,7 +50,7 @@ func NamespaceScope(namespace string) (*HelmAction, error) {
 	return h, nil
 }
 
-func (h *HelmAction) Install(name, chart string, settings []string) (*release.Release, error) {
+func (h *Action) Install(name, chart string, settings []string) (*release.Release, error) {
 	client := action.NewInstall(h.actionConfig)
 
 	cp, err := client.ChartPathOptions.LocateChart(chart, h.settings)
@@ -78,30 +81,25 @@ func (h *HelmAction) Install(name, chart string, settings []string) (*release.Re
 	return rel, nil
 }
 
-func (h *HelmAction) Uninstall(name string) error {
+func (h *Action) Uninstall(name string) error {
 	client := action.NewUninstall(h.actionConfig)
 	_, err := client.Run(name)
 	return err
 }
 
-//func Push() error {
-//	cli, err := push.New()
-//	if err != nil {
-//		return err
-//	}
-//	res, err := cli.UploadChartPackage("/tmp/redis-10.5.8.tgz", false)
-//
-//	fmt.Println(res.StatusCode, res.Body)
-//	return err
-//}
-
-func (h *HelmAction) GetValues(name string) (map[string]interface{}, error) {
+func (h *Action) GetValues(name string) (map[string]interface{}, error) {
 	client := action.NewGetValues(h.actionConfig)
-	vals, err := client.Run(name)
-	return vals, err
+	vars, err := client.Run(name)
+	return vars, err
 }
 
-func (h *HelmAction) Upgrade(name string, chart string, chartValues map[string]interface{}) (interface{}, error) {
+func (h *Action) GetRelease(name string) (*release.Release, error) {
+	client := action.NewGet(h.actionConfig)
+	rel, err := client.Run(name)
+	return rel, err
+}
+
+func (h *Action) Upgrade(name string, chart string, chartValues map[string]interface{}) (interface{}, error) {
 	client := action.NewUpgrade(h.actionConfig)
 	valueOpts := &values.Options{}
 
@@ -118,21 +116,21 @@ func (h *HelmAction) Upgrade(name string, chart string, chartValues map[string]i
 	}
 
 	p := getter.All(h.settings)
-	vals, err := valueOpts.MergeValues(p)
+	vars, err := valueOpts.MergeValues(p)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := mergo.Merge(&vals, chartValues, mergo.WithOverwriteWithEmptyValue); err != nil {
+	if err := mergo.Merge(&vars, chartValues, mergo.WithOverwriteWithEmptyValue); err != nil {
 		return nil, err
 	}
 
 	ctx := context.Background()
-	rel, err := client.RunWithContext(ctx, name, chartRequested, vals)
+	rel, err := client.RunWithContext(ctx, name, chartRequested, vars)
 	return rel, err
 }
 
-func (h *HelmAction) PatchValues(dest map[string]interface{}, setvals []string) error {
+func (h *Action) PatchValues(dest map[string]interface{}, setvals []string) error {
 	for _, value := range setvals {
 		if err := strvals.ParseInto(value, dest); err != nil {
 			return errors.Wrap(err, "failed parsing --set data")
@@ -140,4 +138,47 @@ func (h *HelmAction) PatchValues(dest map[string]interface{}, setvals []string) 
 	}
 
 	return nil
+}
+
+func GetChart(name string) (*chart.Chart, error) {
+	var (
+		err error
+	)
+
+	settings := cli.New()
+	actionConfig := &action.Configuration{}
+
+	h := newAction(settings, actionConfig)
+	client := action.NewShowWithConfig(action.ShowAll, h.actionConfig)
+
+	cp, err := client.ChartPathOptions.LocateChart(name, settings)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetChartByFile(cp)
+}
+
+func GetChartByFile(fp string) (*chart.Chart, error) {
+	c, err := loader.Load(fp)
+	return c, err
+}
+
+func ParseForm(files []*chart.File) (*form.DynamicForm, error) {
+	var (
+		err     error
+		dynForm form.DynamicForm
+	)
+
+	for _, f := range files {
+		if f.Name == "form.yaml" {
+			err = yaml.Unmarshal(f.Data, &dynForm)
+			break
+		}
+	}
+
+	if &dynForm == nil {
+		err = errors.New("no dynamic form found")
+	}
+	return &dynForm, err
 }

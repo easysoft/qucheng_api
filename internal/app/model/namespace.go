@@ -4,6 +4,11 @@
 
 package model
 
+type NamespaceCreate struct {
+	QueryCluster
+	Name string `form:"name" json:"name" binding:"required"`
+}
+
 type NamespaceBase struct {
 	QueryCluster
 	Name string `form:"name" json:"name" binding:"required,namespace_exist=Cluster"`

@@ -29,7 +29,7 @@ import (
 func NamespaceCreate(c *gin.Context) {
 	var (
 		err  error
-		body model.NamespaceBase
+		body model.NamespaceCreate
 	)
 
 	if err = c.ShouldBindJSON(&body); err != nil {

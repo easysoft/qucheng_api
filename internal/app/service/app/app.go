@@ -175,3 +175,7 @@ func (a *Instance) ParseNodePort() int32 {
 
 	return nodePort
 }
+
+func (a *Instance) Settings() *Settings {
+	return newSettings(a)
+}

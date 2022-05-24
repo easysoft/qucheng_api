@@ -95,7 +95,9 @@ func Config(r *gin.Engine) {
 		api.POST("/app/start", AppStart)
 		api.POST("/app/stop", AppStop)
 		api.POST("/app/settings", AppPatchSettings)
+		api.GET("/app/settings/simple", AppSimpleSettings)
 		api.GET("/app/status", AppStatus)
+		api.GET("/test", AppTest)
 
 		api.POST("/namespace/create", NamespaceCreate)
 		api.POST("/namespace/recycle", NamespaceRecycle)
