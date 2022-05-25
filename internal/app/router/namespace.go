@@ -29,6 +29,7 @@ import (
 // @Router /api/cne/namespace/create [post]
 func NamespaceCreate(c *gin.Context) {
 	var (
+		ctx  = c.Request.Context()
 		err  error
 		body model.NamespaceCreate
 	)
@@ -38,7 +39,7 @@ func NamespaceCreate(c *gin.Context) {
 		return
 	}
 
-	if err = service.Namespaces(body.Cluster).Create(body.Name); err != nil {
+	if err = service.Namespaces(ctx, body.Cluster).Create(body.Name); err != nil {
 		klog.ErrorS(err, "create namespace failed", "name", body.Name)
 		renderError(c, http.StatusInternalServerError, err)
 		return
@@ -63,6 +64,7 @@ func NamespaceCreate(c *gin.Context) {
 // @Router /api/cne/namespace/recycle [post]
 func NamespaceRecycle(c *gin.Context) {
 	var (
+		ctx  = c.Request.Context()
 		err  error
 		body model.NamespaceBase
 	)
@@ -72,7 +74,7 @@ func NamespaceRecycle(c *gin.Context) {
 		return
 	}
 
-	if err = service.Namespaces(body.Cluster).Recycle(body.Name); err != nil {
+	if err = service.Namespaces(ctx, body.Cluster).Recycle(body.Name); err != nil {
 		klog.ErrorS(err, "recycle namespace failed", "name", body.Name)
 		renderError(c, http.StatusInternalServerError, err)
 		return
@@ -97,6 +99,7 @@ func NamespaceRecycle(c *gin.Context) {
 // @Router /api/cne/namespace [get]
 func NamespaceGet(c *gin.Context) {
 	var (
+		ctx  = c.Request.Context()
 		err  error
 		body model.NamespaceBase
 	)
@@ -106,7 +109,7 @@ func NamespaceGet(c *gin.Context) {
 		return
 	}
 
-	if ok := service.Namespaces(body.Cluster).Has(body.Name); !ok {
+	if ok := service.Namespaces(ctx, body.Cluster).Has(body.Name); !ok {
 		renderError(c, http.StatusNotFound, errors.New("namespace not found"))
 		return
 	}

@@ -28,6 +28,7 @@ import (
 // @Router /api/cne/middleware/install [post]
 func MiddlewareInstall(c *gin.Context) {
 	var (
+		ctx  = c.Request.Context()
 		err  error
 		body model.Middleware
 		res  interface{}
@@ -38,7 +39,7 @@ func MiddlewareInstall(c *gin.Context) {
 		return
 	}
 
-	if res, err = service.Middlewares().Mysql().CreateDB(&body); err != nil {
+	if res, err = service.Middlewares(ctx).Mysql().CreateDB(&body); err != nil {
 		klog.ErrorS(err, "create mysql db failed", "name", body.Name)
 		renderError(c, http.StatusInternalServerError, err)
 		return
@@ -64,6 +65,7 @@ func MiddlewareInstall(c *gin.Context) {
 func MiddleWareUninstall(c *gin.Context) {
 
 	var (
+		ctx  = c.Request.Context()
 		err  error
 		body model.Middleware
 	)
@@ -73,7 +75,7 @@ func MiddleWareUninstall(c *gin.Context) {
 		return
 	}
 
-	if err = service.Middlewares().Mysql().RecycleDB(&body); err != nil {
+	if err = service.Middlewares(ctx).Mysql().RecycleDB(&body); err != nil {
 		klog.ErrorS(err, "recycle mysql db failed", "name", body.Name)
 		renderError(c, http.StatusInternalServerError, err)
 		return

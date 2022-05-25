@@ -12,12 +12,15 @@ import (
 )
 
 type Manager struct {
+	ctx context.Context
+
 	clusterName string
 	ks          *cluster.Cluster
 }
 
-func NewNamespaces(clusterName string) *Manager {
+func NewNamespaces(ctx context.Context, clusterName string) *Manager {
 	return &Manager{
+		ctx:         ctx,
 		clusterName: clusterName,
 		ks:          cluster.Get(clusterName),
 	}

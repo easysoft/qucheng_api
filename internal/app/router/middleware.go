@@ -5,12 +5,15 @@
 package router
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
 	"github.com/ergoapi/util/environ"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/constant"
+	"gitlab.zcorp.cc/pangu/cne-api/pkg/tlog"
 )
 
 //Cors cors middleware
@@ -65,6 +68,18 @@ func Auth() gin.HandlerFunc {
 			renderMessage(c, http.StatusUnauthorized, "token is empty")
 			return
 		}
+		c.Next()
+	}
+}
+
+func Trace() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		traceId := uuid.NewString()
+		ctx := context.Background()
+		ctx = tlog.NewContext(ctx, "traceId", traceId)
+		c.Request = c.Request.WithContext(ctx)
+		c.Request.Header.Set(HeaderTraceId, traceId)
+		c.Header(HeaderTraceId, traceId)
 		c.Next()
 	}
 }

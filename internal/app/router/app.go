@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm"
 	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm/form"
+	"gitlab.zcorp.cc/pangu/cne-api/pkg/tlog"
 	"gopkg.in/yaml.v3"
 	"net/http"
 
@@ -37,6 +38,7 @@ import (
 // @Router /api/cne/app/install [post]
 func AppInstall(c *gin.Context) {
 	var (
+		ctx  = c.Request.Context()
 		err  error
 		body model.AppCreateModel
 	)
@@ -45,23 +47,25 @@ func AppInstall(c *gin.Context) {
 		return
 	}
 
-	_, err = service.Apps(body.Cluster, body.Namespace).GetApp(body.Name)
-	if !errors.As(err, service.ErrAppNotFound{}) {
-		renderError(c, http.StatusInternalServerError, err)
+	i, err := service.Apps(ctx, body.Cluster, body.Namespace).GetApp(body.Name)
+	if i != nil {
+		tlog.WithCtx(ctx).ErrorS(nil, "app already exists, install can't continue",
+			"cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name, "chart", body.Chart)
+		renderError(c, http.StatusInternalServerError, errors.New("app already installed"))
 		return
 	}
 
-	if err = service.Apps(body.Cluster, body.Namespace).Install(body.Name, body); err != nil {
-		klog.ErrorS(err, "install app failed",
+	if err = service.Apps(ctx, body.Cluster, body.Namespace).Install(body.Name, body); err != nil {
+		tlog.WithCtx(ctx).ErrorS(err, "install app failed",
 			"cluster", body.Cluster, "namespace", body.Namespace,
-			"app", body.Name)
+			"name", body.Name, "chart", body.Chart)
 		renderError(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	klog.InfoS("install app successful",
+	tlog.WithCtx(ctx).InfoS("install app successful",
 		"cluster", body.Cluster, "namespace", body.Namespace,
-		"app", body.Name)
+		"name", body.Name, "chart", body.Chart)
 	renderSuccess(c, http.StatusCreated)
 }
 
@@ -80,6 +84,7 @@ func AppInstall(c *gin.Context) {
 // @Router /api/cne/app/uninstall [post]
 func AppUnInstall(c *gin.Context) {
 	var (
+		ctx  = c.Request.Context()
 		err  error
 		body model.AppModel
 	)
@@ -88,10 +93,10 @@ func AppUnInstall(c *gin.Context) {
 		return
 	}
 
-	_, err = service.Apps(body.Cluster, body.Namespace).GetApp(body.Name)
+	_, err = service.Apps(ctx, body.Cluster, body.Namespace).GetApp(body.Name)
 	if err != nil {
-		klog.ErrorS(err, errGetAppFailed, "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
-		if errors.As(err, service.ErrAppNotFound{}) {
+		tlog.WithCtx(ctx).ErrorS(err, errGetAppFailed, "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
+		if errors.As(err, app.ErrAppNotFound{}) {
 			renderError(c, http.StatusNotFound, err)
 			return
 		}
@@ -99,15 +104,15 @@ func AppUnInstall(c *gin.Context) {
 		return
 	}
 
-	if err = service.Apps(body.Cluster, body.Namespace).UnInstall(body.Name); err != nil {
-		klog.ErrorS(err, "uninstall app failed",
+	if err = service.Apps(ctx, body.Cluster, body.Namespace).UnInstall(body.Name); err != nil {
+		tlog.WithCtx(ctx).ErrorS(err, "uninstall app failed",
 			"cluster", body.Cluster, "namespace", body.Namespace,
 			"app", body.Name)
 		renderError(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	klog.InfoS("uninstall app successful",
+	tlog.WithCtx(ctx).InfoS("uninstall app successful",
 		"cluster", body.Cluster, "namespace", body.Namespace,
 		"app", body.Name)
 	renderSuccess(c, http.StatusOK)
@@ -128,6 +133,7 @@ func AppUnInstall(c *gin.Context) {
 // @Router /api/cne/app/start [post]
 func AppStart(c *gin.Context) {
 	var (
+		ctx  = c.Request.Context()
 		err  error
 		body model.AppManageModel
 	)
@@ -136,24 +142,24 @@ func AppStart(c *gin.Context) {
 		renderError(c, http.StatusBadRequest, err)
 		return
 	}
-	a, err := service.Apps(body.Cluster, body.Namespace).GetApp(body.Name)
+	a, err := service.Apps(ctx, body.Cluster, body.Namespace).GetApp(body.Name)
 	if err != nil {
-		klog.ErrorS(err, errGetAppFailed, "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
-		if errors.As(err, service.ErrAppNotFound{}) {
+		tlog.WithCtx(ctx).ErrorS(err, errGetAppFailed, "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
+		if errors.As(err, app.ErrAppNotFound{}) {
 			renderError(c, http.StatusNotFound, err)
 			return
 		}
-		renderError(c, http.StatusInternalServerError, err)
+		renderError(c, http.StatusInternalServerError, errors.New(errStartAppFailed))
 		return
 	}
 
 	err = a.Start(body.Chart, body.Channel)
 	if err != nil {
-		klog.ErrorS(err, "start app failed", "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
-		renderError(c, http.StatusInternalServerError, err)
+		tlog.WithCtx(ctx).ErrorS(err, errStartAppFailed, "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
+		renderError(c, http.StatusInternalServerError, errors.New(errStartAppFailed))
 		return
 	}
-	klog.InfoS("start app finished", "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
+	tlog.WithCtx(ctx).InfoS("start app successful", "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
 	renderSuccess(c, http.StatusOK)
 }
 
@@ -172,6 +178,7 @@ func AppStart(c *gin.Context) {
 // @Router /api/cne/app/stop [post]
 func AppStop(c *gin.Context) {
 	var (
+		ctx  = c.Request.Context()
 		err  error
 		body model.AppManageModel
 	)
@@ -180,24 +187,24 @@ func AppStop(c *gin.Context) {
 		return
 	}
 
-	a, err := service.Apps(body.Cluster, body.Namespace).GetApp(body.Name)
+	a, err := service.Apps(ctx, body.Cluster, body.Namespace).GetApp(body.Name)
 	if err != nil {
-		klog.ErrorS(err, errGetAppFailed, "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
-		if errors.As(err, service.ErrAppNotFound{}) {
+		tlog.WithCtx(ctx).ErrorS(err, errGetAppFailed, "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
+		if errors.As(err, app.ErrAppNotFound{}) {
 			renderError(c, http.StatusNotFound, err)
 			return
 		}
-		renderError(c, http.StatusInternalServerError, err)
+		renderError(c, http.StatusInternalServerError, errors.New(errStopAppFailed))
 		return
 	}
 
 	err = a.Stop(body.Chart, body.Channel)
 	if err != nil {
-		klog.ErrorS(err, "stop app failed", "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
-		renderError(c, http.StatusInternalServerError, err)
+		tlog.WithCtx(ctx).ErrorS(err, errStopAppFailed, "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
+		renderError(c, http.StatusInternalServerError, errors.New(errStopAppFailed))
 		return
 	}
-	klog.InfoS("stop app finished", "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
+	tlog.WithCtx(ctx).InfoS("stop app successful", "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
 	renderSuccess(c, http.StatusOK)
 }
 
@@ -216,6 +223,7 @@ func AppStop(c *gin.Context) {
 // @Router /api/cne/app/settings [post]
 func AppPatchSettings(c *gin.Context) {
 	var (
+		ctx  = c.Request.Context()
 		err  error
 		body model.AppCreateModel
 	)
@@ -224,24 +232,24 @@ func AppPatchSettings(c *gin.Context) {
 		return
 	}
 
-	a, err := service.Apps(body.Cluster, body.Namespace).GetApp(body.Name)
+	a, err := service.Apps(ctx, body.Cluster, body.Namespace).GetApp(body.Name)
 	if err != nil {
-		klog.ErrorS(err, errGetAppFailed, "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
-		if errors.As(err, service.ErrAppNotFound{}) {
+		tlog.WithCtx(ctx).ErrorS(err, errGetAppFailed, "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
+		if errors.As(err, app.ErrAppNotFound{}) {
 			renderError(c, http.StatusNotFound, err)
 			return
 		}
-		renderError(c, http.StatusInternalServerError, err)
+		renderError(c, http.StatusInternalServerError, errors.New(errPatchAppFailed))
 		return
 	}
 
 	err = a.PatchSettings(body.Chart, body)
 	if err != nil {
-		klog.ErrorS(err, "patch app settings failed", "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
-		renderError(c, http.StatusInternalServerError, err)
+		tlog.WithCtx(ctx).ErrorS(err, errPatchAppFailed, "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
+		renderError(c, http.StatusInternalServerError, errors.New(errPatchAppFailed))
 		return
 	}
-	klog.InfoS("patch app settings failed", "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
+	tlog.WithCtx(ctx).InfoS("patch app settings failed", "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
 	renderSuccess(c, http.StatusOK)
 }
 
@@ -260,9 +268,11 @@ func AppPatchSettings(c *gin.Context) {
 // @Router /api/cne/app/status [get]
 func AppStatus(c *gin.Context) {
 	var (
+		ctx = c.Request.Context()
+
 		err   error
 		query model.AppModel
-		app   *app.Instance
+		i     *app.Instance
 		data  *model.AppRespStatus
 	)
 	if err = c.ShouldBindQuery(&query); err != nil {
@@ -270,26 +280,26 @@ func AppStatus(c *gin.Context) {
 		return
 	}
 
-	app, err = service.Apps(query.Cluster, query.Namespace).GetApp(query.Name)
+	i, err = service.Apps(ctx, query.Cluster, query.Namespace).GetApp(query.Name)
 	if err != nil {
-		klog.ErrorS(err, errGetAppFailed, "cluster", query.Cluster, "namespace", query.Namespace, "name", query.Name)
-		if errors.As(err, service.ErrAppNotFound{}) {
+		tlog.WithCtx(ctx).ErrorS(err, errGetAppFailed, "cluster", query.Cluster, "namespace", query.Namespace, "name", query.Name)
+		if errors.As(err, app.ErrAppNotFound{}) {
 			renderError(c, http.StatusNotFound, err)
 			return
 		}
-		renderError(c, http.StatusInternalServerError, err)
+		renderError(c, http.StatusInternalServerError, errors.New(errGetAppStatusFailed))
 		return
 	}
 
-	data = app.ParseStatus()
+	data = i.ParseStatus()
 
 	/*
 		parse App Uri
 	*/
 	data.AccessHost = ""
-	nodePort := app.ParseNodePort()
+	nodePort := i.ParseNodePort()
 	if nodePort > 0 {
-		nodePortIPS := service.Nodes(query.Cluster).ListNodePortIPS()
+		nodePortIPS := service.Nodes(ctx, query.Cluster).ListNodePortIPS()
 		if len(nodePortIPS) != 0 {
 			accessHost := fmt.Sprintf("%s:%d", nodePortIPS[0], nodePort)
 			data.AccessHost = accessHost
@@ -300,9 +310,11 @@ func AppStatus(c *gin.Context) {
 
 func AppSimpleSettings(c *gin.Context) {
 	var (
+		ctx = c.Request.Context()
+
 		err   error
 		query model.AppSettingMode
-		app   *app.Instance
+		i     *app.Instance
 	)
 
 	if err = c.ShouldBindQuery(&query); err != nil {
@@ -310,10 +322,10 @@ func AppSimpleSettings(c *gin.Context) {
 		return
 	}
 
-	app, err = service.Apps(query.Cluster, query.Namespace).GetApp(query.Name)
+	i, err = service.Apps(ctx, query.Cluster, query.Namespace).GetApp(query.Name)
 	if err != nil {
-		klog.ErrorS(err, errGetAppFailed, "cluster", query.Cluster, "namespace", query.Namespace, "name", query.Name)
-		if errors.As(err, service.ErrAppNotFound{}) {
+		tlog.WithCtx(ctx).ErrorS(err, errGetAppFailed, "cluster", query.Cluster, "namespace", query.Namespace, "name", query.Name)
+		if errors.As(err, app.ErrAppNotFound{}) {
 			renderError(c, http.StatusNotFound, err)
 			return
 		}
@@ -321,9 +333,9 @@ func AppSimpleSettings(c *gin.Context) {
 		return
 	}
 
-	settings, err := app.Settings().Simple().Mode(query.Mode).Parse()
+	settings, err := i.Settings().Simple().Mode(query.Mode).Parse()
 	if err != nil {
-		klog.ErrorS(err, "get simple settings failed", "cluster", query.Cluster, "namespace", query.Namespace, "name", query.Name)
+		tlog.WithCtx(ctx).ErrorS(err, "get simple settings failed", "cluster", query.Cluster, "namespace", query.Namespace, "name", query.Name)
 		renderError(c, http.StatusInternalServerError, err)
 		return
 	}

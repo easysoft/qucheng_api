@@ -5,31 +5,34 @@
 package app
 
 import (
+	"context"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/model"
-	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service/app/component"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/kube/cluster"
 	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm"
+	"gitlab.zcorp.cc/pangu/cne-api/pkg/tlog"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
-	"k8s.io/klog/v2"
 )
 
 type Manager struct {
+	ctx context.Context
+
 	clusterName string
 	ks          *cluster.Cluster
 	namespace   string
 }
 
-func NewApps(clusterName, namespace string) *Manager {
+func NewApps(ctx context.Context, clusterName, namespace string) *Manager {
 	return &Manager{
+		ctx:         ctx,
 		clusterName: clusterName, namespace: namespace,
 		ks: cluster.Get(clusterName),
 	}
 }
 
-func (am *Manager) Install(name string, body model.AppCreateModel) error {
-	h, err := helm.NamespaceScope(am.namespace)
+func (m *Manager) Install(name string, body model.AppCreateModel) error {
+	h, err := helm.NamespaceScope(m.namespace)
 	if err != nil {
 		return err
 	}
@@ -38,13 +41,13 @@ func (am *Manager) Install(name string, body model.AppCreateModel) error {
 	for _, s := range body.Settings {
 		settings = append(settings, s.Key+"="+s.Val)
 	}
-	klog.InfoS("build install settings", "namespace", am.namespace, "name", name, "settings", settings)
+	tlog.WithCtx(m.ctx).InfoS("build install settings", "namespace", m.namespace, "name", name, "settings", settings)
 	_, err = h.Install(name, genChart(body.Channel, body.Chart), settings)
 	return err
 }
 
-func (am *Manager) UnInstall(name string) error {
-	h, err := helm.NamespaceScope(am.namespace)
+func (m *Manager) UnInstall(name string) error {
+	h, err := helm.NamespaceScope(m.namespace)
 	if err != nil {
 		return err
 	}
@@ -53,8 +56,8 @@ func (am *Manager) UnInstall(name string) error {
 	return err
 }
 
-func (am *Manager) GetApp(name string) (*Instance, error) {
-	app := newApp(am, name)
+func (m *Manager) GetApp(name string) (*Instance, error) {
+	app := newApp(m, name)
 	app.components = component.NewComponents()
 
 	selector := labels.NewSelector()
@@ -64,7 +67,7 @@ func (am *Manager) GetApp(name string) (*Instance, error) {
 
 	app.selector = selector
 
-	deployments, err := am.ks.Store.ListDeployments(am.namespace, selector)
+	deployments, err := m.ks.Store.ListDeployments(m.namespace, selector)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +77,7 @@ func (am *Manager) GetApp(name string) (*Instance, error) {
 		}
 	}
 
-	statefulsets, err := am.ks.Store.ListStatefulSets(am.namespace, selector)
+	statefulsets, err := m.ks.Store.ListStatefulSets(m.namespace, selector)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +89,7 @@ func (am *Manager) GetApp(name string) (*Instance, error) {
 	}
 
 	if len(app.Components().Items()) == 0 {
-		return nil, &service.ErrAppNotFound{Name: app.name}
+		return nil, &ErrAppNotFound{Name: app.name}
 	}
 
 	return app, nil

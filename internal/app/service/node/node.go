@@ -5,6 +5,7 @@
 package node
 
 import (
+	"context"
 	"sort"
 
 	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/kube/cluster"
@@ -13,12 +14,15 @@ import (
 )
 
 type Manager struct {
+	ctx context.Context
+
 	clusterName string
 	ks          *cluster.Cluster
 }
 
-func NewNodes(clusterName string) *Manager {
+func NewNodes(ctx context.Context, clusterName string) *Manager {
 	return &Manager{
+		ctx:         ctx,
 		clusterName: clusterName,
 		ks:          cluster.Get(clusterName),
 	}

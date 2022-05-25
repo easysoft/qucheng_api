@@ -5,24 +5,25 @@
 package service
 
 import (
+	"context"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service/app"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service/middleware"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service/namespace"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service/node"
 )
 
-func Apps(clusterName, namespace string) *app.Manager {
-	return app.NewApps("primary", namespace)
+func Apps(ctx context.Context, clusterName, namespace string) *app.Manager {
+	return app.NewApps(ctx, "primary", namespace)
 }
 
-func Nodes(clusterName string) *node.Manager {
-	return node.NewNodes("primary")
+func Nodes(ctx context.Context, clusterName string) *node.Manager {
+	return node.NewNodes(ctx, "primary")
 }
 
-func Namespaces(clusterName string) *namespace.Manager {
-	return namespace.NewNamespaces("primary")
+func Namespaces(ctx context.Context, clusterName string) *namespace.Manager {
+	return namespace.NewNamespaces(ctx, "primary")
 }
 
-func Middlewares() *middleware.Manager {
-	return middleware.New()
+func Middlewares(ctx context.Context) *middleware.Manager {
+	return middleware.New(ctx)
 }

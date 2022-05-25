@@ -1,6 +1,7 @@
 package field
 
 import (
+	"context"
 	"github.com/go-playground/validator/v10"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service"
 )
@@ -21,5 +22,5 @@ func namespaceExist(fl validator.FieldLevel) bool {
 	}
 
 	// default reflect.String:
-	return service.Namespaces(topField.String()).Has(field.String())
+	return service.Namespaces(context.TODO(), topField.String()).Has(field.String())
 }

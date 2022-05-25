@@ -70,7 +70,7 @@ func Config(r *gin.Engine) {
 	r.Use(gin.LoggerWithConfig(gin.LoggerConfig{
 		SkipPaths: []string{"/health", "/metrics"},
 		Formatter: func(param gin.LogFormatterParams) string {
-			return fmt.Sprintf(`time="%s" client=%s method=%s path=%s proto=%s status=%d cost=%s user-agent="%s" error="%s"`+"\n",
+			return fmt.Sprintf(`time="%s" client=%s method=%s path=%s proto=%s status=%d cost=%s user-agent="%s" error="%s" traceId=%s`+"\n",
 				param.TimeStamp.Format(time.RFC3339),
 				param.ClientIP,
 				param.Method,
@@ -80,6 +80,7 @@ func Config(r *gin.Engine) {
 				param.Latency.String(),
 				param.Request.UserAgent(),
 				param.ErrorMessage,
+				param.Request.Header.Get(HeaderTraceId),
 			)
 		},
 	}))
@@ -88,7 +89,7 @@ func Config(r *gin.Engine) {
 	r.GET("/health", health)
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	api := r.Group("/api/cne", Auth())
+	api := r.Group("/api/cne", Auth(), Trace())
 	{
 		api.POST("/app/install", AppInstall)
 		api.POST("/app/uninstall", AppUnInstall)

@@ -4,11 +4,14 @@
 
 package middleware
 
+import "context"
+
 type Manager struct {
+	ctx context.Context
 }
 
-func New() *Manager {
-	return &Manager{}
+func New(ctx context.Context) *Manager {
+	return &Manager{ctx: ctx}
 }
 
 func (m *Manager) Mysql() *MysqlManager {

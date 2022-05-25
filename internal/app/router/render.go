@@ -30,6 +30,7 @@ func renderError(c *gin.Context, code int, err error) {
 	c.JSON(code, gin.H{
 		"code":      code,
 		"message":   errMsg,
+		"traceId":   c.GetHeader(HeaderTraceId),
 		"timestamp": time.Now().Unix(),
 	})
 }
@@ -38,6 +39,7 @@ func renderMessage(c *gin.Context, code int, message string) {
 	c.JSON(code, gin.H{
 		"code":      code,
 		"message":   message,
+		"traceId":   c.GetHeader(HeaderTraceId),
 		"timestamp": time.Now().Unix(),
 	})
 }
@@ -46,6 +48,7 @@ func renderSuccess(c *gin.Context, code int) {
 	c.JSON(code, gin.H{
 		"code":      200,
 		"message":   successMessage,
+		"traceId":   c.GetHeader(HeaderTraceId),
 		"timestamp": time.Now().Unix(),
 	})
 }
@@ -54,6 +57,7 @@ func renderJson(c *gin.Context, code int, data interface{}) {
 	c.JSON(code, gin.H{
 		"code":      200,
 		"message":   successMessage,
+		"traceId":   c.Writer.Header().Get(HeaderTraceId),
 		"timestamp": time.Now().Unix(),
 		"data":      data,
 	})
