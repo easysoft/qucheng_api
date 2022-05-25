@@ -5,6 +5,7 @@
 package cluster
 
 import (
+	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/kube/metric"
 	"os"
 	"path/filepath"
 
@@ -19,6 +20,7 @@ var kubeClusters = make(map[string]*Cluster)
 type Cluster struct {
 	Config  rest.Config
 	Store   *store.Storer
+	Metric  *metric.Metric
 	Clients *store.Clients
 	inner   bool
 	primary bool
@@ -48,9 +50,11 @@ func add(name string, config rest.Config, inner, primary bool) error {
 	}
 
 	s := store.NewStorer(config)
+	m := metric.NewMetric(config)
 	cluster := &Cluster{
 		Config:  config,
 		Store:   s,
+		Metric:  m,
 		Clients: s.Clients,
 		inner:   inner,
 		primary: primary,

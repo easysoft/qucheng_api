@@ -31,3 +31,13 @@ type AppSettingMode struct {
 	AppModel
 	Mode string `form:"mode" binding:"oneof=list map"`
 }
+
+type AppListModel struct {
+	QueryCluster
+	Apps []NamespacedApp `json:"apps" binding:"required"`
+}
+
+type NamespacedApp struct {
+	Namespace string `json:"namespace" binding:"required"`
+	Name      string `json:"name" binding:"required"`
+}

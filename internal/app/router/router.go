@@ -98,6 +98,7 @@ func Config(r *gin.Engine) {
 		api.POST("/app/settings", AppPatchSettings)
 		api.GET("/app/settings/simple", AppSimpleSettings)
 		api.GET("/app/status", AppStatus)
+		api.GET("/app/metric", AppMetric)
 		api.GET("/test", AppTest)
 
 		api.POST("/namespace/create", NamespaceCreate)
@@ -106,6 +107,8 @@ func Config(r *gin.Engine) {
 
 		api.POST("/middleware/install", MiddlewareInstall)
 		api.POST("/middleware/uninstall", MiddleWareUninstall)
+
+		api.POST("/statistics/app", AppListStatistics)
 	}
 
 	r.NoMethod(func(c *gin.Context) {

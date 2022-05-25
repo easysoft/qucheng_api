@@ -57,13 +57,13 @@ func (m *Manager) UnInstall(name string) error {
 }
 
 func (m *Manager) GetApp(name string) (*Instance, error) {
-	app := newApp(m, name)
+	app := newApp(m.ctx, m, name)
 	app.components = component.NewComponents()
 
 	selector := labels.NewSelector()
-	label1, _ := labels.NewRequirement("app.kubernetes.io/managed-by", selection.Equals, []string{"Helm"})
+	//label1, _ := labels.NewRequirement("app.kubernetes.io/managed-by", selection.Equals, []string{"Helm"})
 	labelRelease, _ := labels.NewRequirement("release", selection.Equals, []string{name})
-	selector = selector.Add(*label1, *labelRelease)
+	selector = selector.Add(*labelRelease)
 
 	app.selector = selector
 

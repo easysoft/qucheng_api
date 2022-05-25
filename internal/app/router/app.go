@@ -7,19 +7,15 @@ package router
 import (
 	"fmt"
 	"github.com/pkg/errors"
-	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm"
-	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm/form"
 	"gitlab.zcorp.cc/pangu/cne-api/pkg/tlog"
-	"gopkg.in/yaml.v3"
 	"net/http"
+	"sync"
 
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service/app"
 
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service"
 
 	"github.com/gin-gonic/gin"
-	"k8s.io/klog/v2"
-
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/model"
 )
 
@@ -342,25 +338,100 @@ func AppSimpleSettings(c *gin.Context) {
 	renderJson(c, http.StatusOK, settings)
 }
 
-func AppTest(c *gin.Context) {
-	ch, err := helm.GetChart("qucheng-test/cne-market-api")
+func AppMetric(c *gin.Context) {
+	var (
+		ctx = c.Request.Context()
+
+		err   error
+		query model.AppModel
+		i     *app.Instance
+	)
+	if err = c.ShouldBindQuery(&query); err != nil {
+		renderError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	i, err = service.Apps(ctx, query.Cluster, query.Namespace).GetApp(query.Name)
 	if err != nil {
+		tlog.WithCtx(ctx).ErrorS(err, errGetAppFailed, "cluster", query.Cluster, "namespace", query.Namespace, "name", query.Name)
+		if errors.As(err, &app.ErrAppNotFound{}) {
+			renderError(c, http.StatusNotFound, err)
+			return
+		}
+		renderError(c, http.StatusInternalServerError, errors.New(errGetAppStatusFailed))
+		return
+	}
+
+	data := i.GetMetrics()
+	renderJson(c, http.StatusOK, data)
+}
+
+func AppListStatistics(c *gin.Context) {
+	var (
+		ctx  = c.Request.Context()
+		wg   sync.WaitGroup
+		err  error
+		body model.AppListModel
+	)
+
+	if err = c.ShouldBindJSON(&body); err != nil {
+		renderError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	metricList := make([]model.NamespaceAppMetric, len(body.Apps))
+
+	for id, a := range body.Apps {
+		wg.Add(1)
+		go func(id int, namespacedApp *model.NamespacedApp) {
+			defer wg.Done()
+			metricList[id].Name = a.Name
+			metricList[id].Namespace = a.Namespace
+
+			i, err := service.Apps(ctx, body.Cluster, a.Namespace).GetApp(a.Name)
+			if err != nil {
+				tlog.WithCtx(ctx).ErrorS(err, errGetAppFailed, "namespace", a.Namespace, "name", a.Name)
+				return
+			}
+			m := i.GetMetrics()
+			metricList[id].Metrics = m
+
+			s := i.ParseStatus()
+			metricList[id].Status = s.Status
+			metricList[id].Age = s.Age
+		}(id, &a)
+	}
+
+	wg.Wait()
+	renderJson(c, http.StatusOK, metricList)
+}
+
+func AppTest(c *gin.Context) {
+	var (
+		ctx = c.Request.Context()
+
+		err   error
+		query model.AppModel
+		i     *app.Instance
+	)
+
+	if err = c.ShouldBindQuery(&query); err != nil {
+		renderError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	i, err = service.Apps(ctx, query.Cluster, query.Namespace).GetApp(query.Name)
+	if err != nil {
+		tlog.WithCtx(ctx).ErrorS(err, errGetAppFailed, "cluster", query.Cluster, "namespace", query.Namespace, "name", query.Name)
+		if errors.As(err, &app.ErrAppNotFound{}) {
+			renderError(c, http.StatusNotFound, err)
+			return
+		}
 		renderError(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	fmt.Println(helm.ParseValues(ch.Values))
-	var dynForm form.DynamicForm
-	for _, f := range ch.Files {
-		if f.Name == "form.yaml" {
-			err = yaml.Unmarshal(f.Data, &dynForm)
-			if err != nil {
-				klog.ErrorS(err, "parse dynform failed")
-				renderError(c, http.StatusInternalServerError, errors.New("parse dynform failed"))
-				return
-			}
-		}
-	}
-	fmt.Println(dynForm)
-	renderSuccess(c, 200)
+	data := i.GetMetrics()
+
+	renderJson(c, 200, data)
 }

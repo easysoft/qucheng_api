@@ -21,3 +21,26 @@ type AppRespStatusComponent struct {
 	Replicas   int32                  `json:"replicas"`
 	Age        int64                  `json:"age"`
 }
+
+type NamespaceAppMetric struct {
+	Namespace string     `json:"namespace"`
+	Name      string     `json:"name"`
+	Metrics   *AppMetric `json:"metrics"`
+	Status    string     `json:"status"`
+	Age       int64      `json:"age"`
+}
+
+type AppMetric struct {
+	Cpu    ResourceCpu    `json:"cpu"`
+	Memory ResourceMemory `json:"memory"`
+}
+
+type ResourceCpu struct {
+	Usage float64 `json:"usage"`
+	Limit float64 `json:"limit"`
+}
+
+type ResourceMemory struct {
+	Usage int64 `json:"usage"`
+	Limit int64 `json:"limit"`
+}
