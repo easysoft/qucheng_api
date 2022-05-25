@@ -21,20 +21,19 @@ func parseStatus(replicas, availableReplicas, updatedReplicas, readyReplicas int
 		return
 	}
 
-	if replicas > 0 && readyReplicas < replicas {
-		appStatus = constant.AppStatusStarting
+	if replicas > 0 && updatedReplicas == replicas && readyReplicas == replicas {
+		appStatus = constant.AppStatusRunning
 		return
 	}
 
-	if updatedReplicas == replicas && readyReplicas == replicas {
-		appStatus = constant.AppStatusRunning
-		return
+	if replicas > 0 && readyReplicas < replicas {
+		appStatus = constant.AppStatusStarting
 	}
 
 	for _, pod := range pods {
 		for _, ctnStatus := range pod.Status.ContainerStatuses {
 			if !*ctnStatus.Started {
-				if ctnStatus.State.Waiting != nil && ctnStatus.State.Waiting.Reason == "CrashLoopBackOff" {
+				if ctnStatus.State.Waiting != nil && ctnStatus.State.Waiting.Reason == "CrashLoopBackOff" && ctnStatus.RestartCount >= 3 {
 					appStatus = constant.AppStatusAbnormal
 					break
 				}
