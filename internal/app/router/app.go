@@ -96,7 +96,7 @@ func AppUnInstall(c *gin.Context) {
 	_, err = service.Apps(ctx, body.Cluster, body.Namespace).GetApp(body.Name)
 	if err != nil {
 		tlog.WithCtx(ctx).ErrorS(err, errGetAppFailed, "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
-		if errors.As(err, app.ErrAppNotFound{}) {
+		if errors.As(err, &app.ErrAppNotFound{}) {
 			renderError(c, http.StatusNotFound, err)
 			return
 		}
@@ -145,7 +145,7 @@ func AppStart(c *gin.Context) {
 	a, err := service.Apps(ctx, body.Cluster, body.Namespace).GetApp(body.Name)
 	if err != nil {
 		tlog.WithCtx(ctx).ErrorS(err, errGetAppFailed, "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
-		if errors.As(err, app.ErrAppNotFound{}) {
+		if errors.As(err, &app.ErrAppNotFound{}) {
 			renderError(c, http.StatusNotFound, err)
 			return
 		}
@@ -190,7 +190,7 @@ func AppStop(c *gin.Context) {
 	a, err := service.Apps(ctx, body.Cluster, body.Namespace).GetApp(body.Name)
 	if err != nil {
 		tlog.WithCtx(ctx).ErrorS(err, errGetAppFailed, "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
-		if errors.As(err, app.ErrAppNotFound{}) {
+		if errors.As(err, &app.ErrAppNotFound{}) {
 			renderError(c, http.StatusNotFound, err)
 			return
 		}
@@ -235,7 +235,7 @@ func AppPatchSettings(c *gin.Context) {
 	a, err := service.Apps(ctx, body.Cluster, body.Namespace).GetApp(body.Name)
 	if err != nil {
 		tlog.WithCtx(ctx).ErrorS(err, errGetAppFailed, "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
-		if errors.As(err, app.ErrAppNotFound{}) {
+		if errors.As(err, &app.ErrAppNotFound{}) {
 			renderError(c, http.StatusNotFound, err)
 			return
 		}
@@ -283,7 +283,7 @@ func AppStatus(c *gin.Context) {
 	i, err = service.Apps(ctx, query.Cluster, query.Namespace).GetApp(query.Name)
 	if err != nil {
 		tlog.WithCtx(ctx).ErrorS(err, errGetAppFailed, "cluster", query.Cluster, "namespace", query.Namespace, "name", query.Name)
-		if errors.As(err, app.ErrAppNotFound{}) {
+		if errors.As(err, &app.ErrAppNotFound{}) {
 			renderError(c, http.StatusNotFound, err)
 			return
 		}
@@ -325,7 +325,7 @@ func AppSimpleSettings(c *gin.Context) {
 	i, err = service.Apps(ctx, query.Cluster, query.Namespace).GetApp(query.Name)
 	if err != nil {
 		tlog.WithCtx(ctx).ErrorS(err, errGetAppFailed, "cluster", query.Cluster, "namespace", query.Namespace, "name", query.Name)
-		if errors.As(err, app.ErrAppNotFound{}) {
+		if errors.As(err, &app.ErrAppNotFound{}) {
 			renderError(c, http.StatusNotFound, err)
 			return
 		}
