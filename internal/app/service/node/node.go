@@ -6,6 +6,10 @@ package node
 
 import (
 	"context"
+	"gitlab.zcorp.cc/pangu/cne-api/internal/app/model"
+	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/kube/metric"
+	"gitlab.zcorp.cc/pangu/cne-api/pkg/tlog"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"sort"
 
 	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/kube/cluster"
@@ -52,4 +56,75 @@ func (m *Manager) ListNodePortIPS() []string {
 	}
 
 	return ips
+}
+
+func (m *Manager) GetNodes() []*v1.Node {
+	var nodes []*v1.Node
+	var err error
+	nodes, err = m.ks.Store.ListNodes(labels.Everything())
+	if err != nil {
+		tlog.WithCtx(m.ctx).ErrorS(err, "get nodes failed")
+	}
+	return nodes
+}
+
+func (m *Manager) GetNodesMetrics() []*metric.Res {
+	return m.ks.Metric.ListNodeMetrics(m.ctx)
+}
+
+func (m *Manager) Statistic() (model.NodeMetric, error) {
+	nodes := m.GetNodes()
+	metrics := m.GetNodesMetrics()
+
+	var usage metric.Res
+	var allocatable metric.Res
+	var capacity metric.Res
+
+	sumNodeUsage(&usage, metrics)
+	sumNodeCapacity(&capacity, &allocatable, nodes)
+
+	memUsage, _ := usage.Memory.AsInt64()
+	memCapacity, _ := capacity.Memory.AsInt64()
+	memAllocatable, _ := allocatable.Memory.AsInt64()
+
+	metricData := model.NodeMetric{
+		Cpu: model.NodeResourceCpu{
+			Usage: usage.Cpu.AsApproximateFloat64(), Capacity: capacity.Cpu.AsApproximateFloat64(),
+			Allocatable: allocatable.Cpu.AsApproximateFloat64(),
+		},
+		Memory: model.NodeResourceMemory{
+			Usage: memUsage, Capacity: memCapacity, Allocatable: memAllocatable,
+		},
+	}
+
+	return metricData, nil
+}
+
+func sumNodeUsage(dst *metric.Res, metrics []*metric.Res) {
+	count := len(metrics)
+
+	if count >= 1 {
+		dst.Cpu = metrics[0].Cpu
+		dst.Memory = metrics[0].Memory
+	}
+
+	for _, m := range metrics[1:] {
+		dst.Cpu.Add(m.Cpu.DeepCopy())
+		dst.Memory.Add(m.Memory.DeepCopy())
+	}
+}
+
+func sumNodeCapacity(cap *metric.Res, allocat *metric.Res, nodes []*v1.Node) {
+	cap.Cpu = resource.NewQuantity(0, resource.DecimalExponent)
+	cap.Memory = resource.NewQuantity(0, resource.DecimalExponent)
+	allocat.Cpu = resource.NewQuantity(0, resource.DecimalExponent)
+	allocat.Memory = resource.NewQuantity(0, resource.DecimalExponent)
+
+	for _, node := range nodes {
+		cap.Cpu.Add(*node.Status.Capacity.Cpu())
+		cap.Memory.Add(*node.Status.Capacity.Memory())
+
+		allocat.Cpu.Add(*node.Status.Allocatable.Cpu())
+		allocat.Memory.Add(*node.Status.Allocatable.Memory())
+	}
 }

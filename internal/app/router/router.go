@@ -109,6 +109,7 @@ func Config(r *gin.Engine) {
 		api.POST("/middleware/uninstall", MiddleWareUninstall)
 
 		api.POST("/statistics/app", AppListStatistics)
+		api.GET("/statistics/cluster", ClusterStatistics)
 	}
 
 	r.NoMethod(func(c *gin.Context) {

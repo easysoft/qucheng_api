@@ -44,3 +44,26 @@ type ResourceMemory struct {
 	Usage int64 `json:"usage"`
 	Limit int64 `json:"limit"`
 }
+
+type NodeMetric struct {
+	Cpu    NodeResourceCpu    `json:"cpu"`
+	Memory NodeResourceMemory `json:"memory"`
+}
+
+type NodeResourceCpu struct {
+	Usage       float64 `json:"usage"`
+	Capacity    float64 `json:"capacity"`
+	Allocatable float64 `json:"allocatable"`
+}
+
+type NodeResourceMemory struct {
+	Usage       int64 `json:"usage"`
+	Capacity    int64 `json:"capacity"`
+	Allocatable int64 `json:"allocatable"`
+}
+
+type ClusterMetric struct {
+	Status    string     `json:"status"`
+	NodeCount int        `json:"node_count"`
+	Metrics   NodeMetric `json:"metrics"`
+}

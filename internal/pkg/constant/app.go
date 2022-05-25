@@ -18,6 +18,13 @@ const (
 	AppStatusRunning                             // 运行中
 )
 
+type ClusterStatusType int
+
+const (
+	ClusterStatusNormal   ClusterStatusType = iota + 1 // 正常
+	ClusterStatusAbnormal                              // 异常
+)
+
 var AppStatusMap = map[AppStatusType]string{
 	AppStatusUnknown:    "unknown",
 	AppStatusAbnormal:   "abnormal",
@@ -28,4 +35,9 @@ var AppStatusMap = map[AppStatusType]string{
 	AppStatusSuspending: "suspending",
 	AppStatusSuspended:  "suspended",
 	AppStatusRunning:    "running",
+}
+
+var ClusterStatusMap = map[ClusterStatusType]string{
+	ClusterStatusNormal:   "normal",
+	ClusterStatusAbnormal: "abnormal",
 }

@@ -47,6 +47,22 @@ func (m *Metric) ListPodMetrics(ctx context.Context, namespace string, selector 
 	return result
 }
 
+func (m *Metric) ListNodeMetrics(ctx context.Context) []*Res {
+	var result []*Res
+
+	metrics, err := m.client.MetricsV1beta1().NodeMetricses().List(ctx, v1.ListOptions{})
+	if err != nil {
+		return result
+	}
+
+	for _, nm := range metrics.Items {
+		result = append(result, &Res{
+			Cpu: nm.Usage.Cpu(), Memory: nm.Usage.Memory(),
+		})
+	}
+	return result
+}
+
 func sumPodMetric(pm *v1beta1.PodMetrics) *Res {
 	var m Res
 	count := len(pm.Containers)
