@@ -383,23 +383,25 @@ func AppListStatistics(c *gin.Context) {
 
 	for id, a := range body.Apps {
 		wg.Add(1)
-		go func(id int, namespacedApp *model.NamespacedApp) {
+		go func(index int, na model.NamespacedApp) {
 			defer wg.Done()
-			metricList[id].Name = a.Name
-			metricList[id].Namespace = a.Namespace
+			tlog.WithCtx(ctx).InfoS("test", "index", index, "namespace", na.Namespace, "name", na.Name)
 
-			i, err := service.Apps(ctx, body.Cluster, a.Namespace).GetApp(a.Name)
+			metricList[index].Name = na.Name
+			metricList[index].Namespace = na.Namespace
+
+			i, err := service.Apps(ctx, body.Cluster, na.Namespace).GetApp(na.Name)
 			if err != nil {
-				tlog.WithCtx(ctx).ErrorS(err, errGetAppFailed, "namespace", a.Namespace, "name", a.Name)
+				tlog.WithCtx(ctx).ErrorS(err, errGetAppFailed, "namespace", na.Namespace, "name", na.Name)
 				return
 			}
 			m := i.GetMetrics()
-			metricList[id].Metrics = m
+			metricList[index].Metrics = m
 
 			s := i.ParseStatus()
-			metricList[id].Status = s.Status
-			metricList[id].Age = s.Age
-		}(id, &a)
+			metricList[index].Status = s.Status
+			metricList[index].Age = s.Age
+		}(id, a)
 	}
 
 	wg.Wait()
