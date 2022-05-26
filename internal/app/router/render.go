@@ -27,7 +27,7 @@ func renderError(c *gin.Context, code int, err error) {
 		}
 		errMsg = strings.Join(errlist, ";")
 	}
-	c.JSON(code, gin.H{
+	c.JSON(200, gin.H{
 		"code":      code,
 		"message":   errMsg,
 		"traceId":   c.GetHeader(HeaderTraceId),
@@ -36,7 +36,7 @@ func renderError(c *gin.Context, code int, err error) {
 }
 
 func renderMessage(c *gin.Context, code int, message string) {
-	c.JSON(code, gin.H{
+	c.JSON(200, gin.H{
 		"code":      code,
 		"message":   message,
 		"traceId":   c.GetHeader(HeaderTraceId),
@@ -45,7 +45,7 @@ func renderMessage(c *gin.Context, code int, message string) {
 }
 
 func renderSuccess(c *gin.Context, code int) {
-	c.JSON(code, gin.H{
+	c.JSON(200, gin.H{
 		"code":      200,
 		"message":   successMessage,
 		"traceId":   c.GetHeader(HeaderTraceId),
@@ -54,7 +54,7 @@ func renderSuccess(c *gin.Context, code int) {
 }
 
 func renderJson(c *gin.Context, code int, data interface{}) {
-	c.JSON(code, gin.H{
+	c.JSON(200, gin.H{
 		"code":      200,
 		"message":   successMessage,
 		"traceId":   c.Writer.Header().Get(HeaderTraceId),
@@ -64,7 +64,7 @@ func renderJson(c *gin.Context, code int, data interface{}) {
 }
 
 func renderJsonWithPagination(c *gin.Context, code int, data interface{}, p interface{}) {
-	c.JSON(code, gin.H{
+	c.JSON(200, gin.H{
 		"code":       200,
 		"message":    successMessage,
 		"timestamp":  time.Now().Unix(),

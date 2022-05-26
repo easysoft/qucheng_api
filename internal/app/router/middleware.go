@@ -66,6 +66,7 @@ func Auth() gin.HandlerFunc {
 		tokenDefault := environ.GetEnv("CNE_API_TOKEN", "gwaN4KynqNqQoPD7eN8s")
 		if tokenValid != tokenDefault {
 			renderMessage(c, http.StatusUnauthorized, "token is empty")
+			c.Abort()
 			return
 		}
 		c.Next()

@@ -279,7 +279,7 @@ func AppStatus(c *gin.Context) {
 	i, err = service.Apps(ctx, query.Cluster, query.Namespace).GetApp(query.Name)
 	if err != nil {
 		tlog.WithCtx(ctx).ErrorS(err, errGetAppFailed, "cluster", query.Cluster, "namespace", query.Namespace, "name", query.Name)
-		if errors.As(err, &app.ErrAppNotFound{}) {
+		if errors.Is(err, app.ErrAppNotFound{}) {
 			renderError(c, http.StatusNotFound, err)
 			return
 		}
