@@ -103,10 +103,12 @@ func (m *Manager) Statistic() (model.NodeMetric, error) {
 func sumNodeUsage(dst *metric.Res, metrics []*metric.Res) {
 	count := len(metrics)
 
-	if count >= 1 {
-		dst.Cpu = metrics[0].Cpu
-		dst.Memory = metrics[0].Memory
+	if count == 0 {
+		return
 	}
+
+	dst.Cpu = metrics[0].Cpu
+	dst.Memory = metrics[0].Memory
 
 	for _, m := range metrics[1:] {
 		dst.Cpu.Add(m.Cpu.DeepCopy())
