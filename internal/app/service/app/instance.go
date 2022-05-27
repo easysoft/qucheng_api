@@ -131,16 +131,10 @@ func (i *Instance) GetMetrics() *model.AppMetric {
 }
 
 func sumPodUsage(dst *metric.Res, metrics []*metric.Res) {
-	count := len(metrics)
+	dst.Cpu = resource.NewQuantity(0, resource.DecimalExponent)
+	dst.Memory = resource.NewQuantity(0, resource.DecimalExponent)
 
-	if count == 0 {
-		return
-	}
-
-	dst.Cpu = metrics[0].Cpu
-	dst.Memory = metrics[0].Memory
-
-	for _, m := range metrics[1:] {
+	for _, m := range metrics {
 		dst.Cpu.Add(m.Cpu.DeepCopy())
 		dst.Memory.Add(m.Memory.DeepCopy())
 	}
