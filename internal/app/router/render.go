@@ -5,9 +5,10 @@
 package router
 
 import (
-	"github.com/go-playground/validator/v10"
 	"strings"
 	"time"
+
+	"github.com/go-playground/validator/v10"
 
 	"github.com/gin-gonic/gin"
 )

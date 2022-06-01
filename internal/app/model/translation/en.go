@@ -2,10 +2,11 @@ package translation
 
 import (
 	"fmt"
+	"strings"
+
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
 	"k8s.io/klog/v2"
-	"strings"
 )
 
 func RegisterCustomENTranslations(v *validator.Validate, trans ut.Translator) (err error) {

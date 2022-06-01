@@ -10,10 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/klog/v2"
-
 	"github.com/ergoapi/util/exstr"
 	_ "github.com/go-sql-driver/mysql"
+	"k8s.io/klog/v2"
 )
 
 type DB struct {

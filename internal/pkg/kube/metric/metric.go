@@ -2,6 +2,7 @@ package metric
 
 import (
 	"context"
+
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/rest"
@@ -29,7 +30,7 @@ func (m *Metric) GetPodMetric(ctx context.Context, namespace, name string) (*Res
 		return nil, err
 	}
 
-	return sumPodMetric(metric), nil
+	return sumPodMetric(*metric), nil
 }
 
 func (m *Metric) ListPodMetrics(ctx context.Context, namespace string, selector labels.Selector) []*Res {
@@ -41,7 +42,7 @@ func (m *Metric) ListPodMetrics(ctx context.Context, namespace string, selector 
 	}
 
 	for _, pm := range metrics.Items {
-		result = append(result, sumPodMetric(&pm))
+		result = append(result, sumPodMetric(pm))
 	}
 
 	return result
@@ -63,7 +64,7 @@ func (m *Metric) ListNodeMetrics(ctx context.Context) []*Res {
 	return result
 }
 
-func sumPodMetric(pm *v1beta1.PodMetrics) *Res {
+func sumPodMetric(pm v1beta1.PodMetrics) *Res {
 	var m Res
 	count := len(pm.Containers)
 	if count >= 1 {

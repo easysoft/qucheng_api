@@ -6,16 +6,13 @@ package helm
 
 import (
 	"context"
-	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm/form"
-	"gopkg.in/yaml.v3"
 	"log"
 	"os"
 
-	"github.com/pkg/errors"
-	"helm.sh/helm/v3/pkg/strvals"
-
 	"github.com/imdario/mergo"
-
+	"github.com/pkg/errors"
+	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm/form"
+	"gopkg.in/yaml.v3"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
@@ -23,6 +20,7 @@ import (
 	"helm.sh/helm/v3/pkg/cli/values"
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/release"
+	"helm.sh/helm/v3/pkg/strvals"
 )
 
 type Action struct {

@@ -6,6 +6,7 @@ package app
 
 import (
 	"context"
+
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/model"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service/app/component"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/kube/cluster"
@@ -74,6 +75,7 @@ func (m *Manager) GetApp(name string) (*Instance, error) {
 	if len(deployments) >= 1 {
 		for _, d := range deployments {
 			app.components.Add(component.NewDeployComponent(d, app.ks))
+			tlog.WithCtx(m.ctx).InfoS("find component with kind deployment", "cpName", d.Name)
 		}
 	}
 
@@ -85,6 +87,7 @@ func (m *Manager) GetApp(name string) (*Instance, error) {
 	if len(statefulsets) >= 1 {
 		for _, s := range statefulsets {
 			app.components.Add(component.NewStatefulsetComponent(s, app.ks))
+			tlog.WithCtx(m.ctx).InfoS("find component with kind statefulset", "cpName", s.Name)
 		}
 	}
 

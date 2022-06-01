@@ -6,12 +6,13 @@ package router
 
 import (
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
 	enTranslations "github.com/go-playground/validator/v10/translations/en"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/model/translation"
-	"net/http"
-	"time"
 
 	_ "gitlab.zcorp.cc/pangu/cne-api/docs"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/model/field"

@@ -6,17 +6,16 @@ package router
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
-	"gitlab.zcorp.cc/pangu/cne-api/pkg/tlog"
 	"net/http"
 	"sync"
 
-	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service/app"
-
+	"gitlab.zcorp.cc/pangu/cne-api/internal/app/model"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service"
+	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service/app"
+	"gitlab.zcorp.cc/pangu/cne-api/pkg/tlog"
 
 	"github.com/gin-gonic/gin"
-	"gitlab.zcorp.cc/pangu/cne-api/internal/app/model"
+	"github.com/pkg/errors"
 )
 
 // AppInstall 安装接口
@@ -37,13 +36,14 @@ func AppInstall(c *gin.Context) {
 		ctx  = c.Request.Context()
 		err  error
 		body model.AppCreateModel
+		i    *app.Instance
 	)
 	if err = c.ShouldBindJSON(&body); err != nil {
 		renderError(c, http.StatusBadRequest, err)
 		return
 	}
 
-	i, err := service.Apps(ctx, body.Cluster, body.Namespace).GetApp(body.Name)
+	i, err = service.Apps(ctx, body.Cluster, body.Namespace).GetApp(body.Name)
 	if i != nil {
 		tlog.WithCtx(ctx).ErrorS(nil, "app already exists, install can't continue",
 			"cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name, "chart", body.Chart)
@@ -132,13 +132,15 @@ func AppStart(c *gin.Context) {
 		ctx  = c.Request.Context()
 		err  error
 		body model.AppManageModel
+
+		i *app.Instance
 	)
 
 	if err = c.ShouldBindJSON(&body); err != nil {
 		renderError(c, http.StatusBadRequest, err)
 		return
 	}
-	a, err := service.Apps(ctx, body.Cluster, body.Namespace).GetApp(body.Name)
+	i, err = service.Apps(ctx, body.Cluster, body.Namespace).GetApp(body.Name)
 	if err != nil {
 		tlog.WithCtx(ctx).ErrorS(err, errGetAppFailed, "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
 		if errors.As(err, &app.ErrAppNotFound{}) {
@@ -149,7 +151,7 @@ func AppStart(c *gin.Context) {
 		return
 	}
 
-	err = a.Start(body.Chart, body.Channel)
+	err = i.Start(body.Chart, body.Channel)
 	if err != nil {
 		tlog.WithCtx(ctx).ErrorS(err, errStartAppFailed, "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
 		renderError(c, http.StatusInternalServerError, errors.New(errStartAppFailed))
@@ -177,13 +179,15 @@ func AppStop(c *gin.Context) {
 		ctx  = c.Request.Context()
 		err  error
 		body model.AppManageModel
+
+		i *app.Instance
 	)
 	if err = c.ShouldBindJSON(&body); err != nil {
 		renderError(c, http.StatusBadRequest, err)
 		return
 	}
 
-	a, err := service.Apps(ctx, body.Cluster, body.Namespace).GetApp(body.Name)
+	i, err = service.Apps(ctx, body.Cluster, body.Namespace).GetApp(body.Name)
 	if err != nil {
 		tlog.WithCtx(ctx).ErrorS(err, errGetAppFailed, "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
 		if errors.As(err, &app.ErrAppNotFound{}) {
@@ -194,7 +198,7 @@ func AppStop(c *gin.Context) {
 		return
 	}
 
-	err = a.Stop(body.Chart, body.Channel)
+	err = i.Stop(body.Chart, body.Channel)
 	if err != nil {
 		tlog.WithCtx(ctx).ErrorS(err, errStopAppFailed, "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
 		renderError(c, http.StatusInternalServerError, errors.New(errStopAppFailed))
@@ -222,13 +226,15 @@ func AppPatchSettings(c *gin.Context) {
 		ctx  = c.Request.Context()
 		err  error
 		body model.AppCreateModel
+
+		i *app.Instance
 	)
 	if err = c.ShouldBindJSON(&body); err != nil {
 		renderError(c, http.StatusBadRequest, err)
 		return
 	}
 
-	a, err := service.Apps(ctx, body.Cluster, body.Namespace).GetApp(body.Name)
+	i, err = service.Apps(ctx, body.Cluster, body.Namespace).GetApp(body.Name)
 	if err != nil {
 		tlog.WithCtx(ctx).ErrorS(err, errGetAppFailed, "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
 		if errors.As(err, &app.ErrAppNotFound{}) {
@@ -239,7 +245,7 @@ func AppPatchSettings(c *gin.Context) {
 		return
 	}
 
-	err = a.PatchSettings(body.Chart, body)
+	err = i.PatchSettings(body.Chart, body)
 	if err != nil {
 		tlog.WithCtx(ctx).ErrorS(err, errPatchAppFailed, "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
 		renderError(c, http.StatusInternalServerError, errors.New(errPatchAppFailed))

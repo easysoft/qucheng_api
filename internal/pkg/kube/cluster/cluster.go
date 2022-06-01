@@ -5,14 +5,14 @@
 package cluster
 
 import (
-	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/kube/metric"
 	"os"
 	"path/filepath"
 
+	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/kube/metric"
+	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/kube/store"
+
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-
-	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/kube/store"
 )
 
 var kubeClusters = make(map[string]*Cluster)
@@ -40,8 +40,7 @@ func Exist(name string) bool {
 }
 
 func Get(name string) *Cluster {
-	c, _ := kubeClusters[name]
-	return c
+	return kubeClusters[name]
 }
 
 func add(name string, config rest.Config, inner, primary bool) error {
