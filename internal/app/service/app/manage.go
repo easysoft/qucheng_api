@@ -44,6 +44,13 @@ func (m *Manager) Install(name string, body model.AppCreateModel) error {
 	}
 	tlog.WithCtx(m.ctx).InfoS("build install settings", "namespace", m.namespace, "name", name, "settings", settings)
 	_, err = h.Install(name, genChart(body.Channel, body.Chart), settings)
+	if err != nil {
+		tlog.WithCtx(m.ctx).ErrorS(err, "helm install failed", "namespace", m.namespace, "name", name)
+		if _, e := h.GetRelease(name); e == nil {
+			tlog.WithCtx(m.ctx).InfoS("recycle incomplete release")
+			_ = h.Uninstall(name)
+		}
+	}
 	return err
 }
 
