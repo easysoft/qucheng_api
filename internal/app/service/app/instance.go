@@ -92,7 +92,7 @@ func (i *Instance) ParseNodePort() int32 {
 	for _, s := range services {
 		if s.Spec.Type == v1.ServiceTypeNodePort {
 			for _, p := range s.Spec.Ports {
-				if p.Name == constant.ServicePortWeb {
+				if p.Name == constant.ServicePortWeb || p.Name == "http" {
 					nodePort = p.NodePort
 					break
 				}
