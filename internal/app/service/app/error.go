@@ -1,15 +1,9 @@
 package app
 
-import "fmt"
+import "errors"
 
-type ErrAppNotFound struct {
-	Name string
-}
+var (
+	ErrAppNotFound = errors.New("release: not found")
 
-//func NewErrAppNotFound(name string) error {
-//	return ErrAppNotFound{Name: name}
-//}
-
-func (e ErrAppNotFound) Error() string {
-	return fmt.Sprintf("app %s not found", e.Name)
-}
+	ErrPathParseFailed = errors.New("release: path parse failed")
+)

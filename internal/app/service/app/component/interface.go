@@ -10,6 +10,6 @@ type Component interface {
 	Name() string
 	Kind() string
 	Replicas() int32
-	Status() constant.AppStatusType
+	Status(stopped bool) constant.AppStatusType
 	Age() int64
 }

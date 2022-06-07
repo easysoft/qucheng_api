@@ -11,41 +11,37 @@ import (
 )
 
 func (i *Instance) Stop(chart, channel string) error {
-	h, _ := helm.NamespaceScope(i.namespace)
-	vals, err := h.GetValues(i.name)
-	if err != nil {
-		return err
-	}
+
+	vars := i.release.Config
 
 	updateMap := map[string]interface{}{
 		"global": map[string]interface{}{
-			"stoped": true,
+			"stopped": true,
 		},
 	}
 
-	if err := mergo.Merge(&vals, updateMap, mergo.WithOverwriteWithEmptyValue); err != nil {
+	if err := mergo.Merge(&vars, updateMap, mergo.WithOverwriteWithEmptyValue); err != nil {
 		return err
 	}
 
-	_, err = h.Upgrade(i.name, genChart(channel, chart), vals)
+	h, _ := helm.NamespaceScope(i.namespace)
+	_, err := h.Upgrade(i.name, genChart(channel, chart), vars)
 	return err
 }
 
 func (i *Instance) Start(chart, channel string) error {
 	h, _ := helm.NamespaceScope(i.namespace)
-	vals, err := h.GetValues(i.name)
-	if err != nil {
-		return err
-	}
+	vars := i.release.Config
 
-	globalVals, ok := vals["global"]
+	globalVars, ok := vars["global"]
 	if ok {
-		globalVals := globalVals.(map[string]interface{})
+		globalVals := globalVars.(map[string]interface{})
 		delete(globalVals, "stoped")
-		vals["global"] = globalVals
+		delete(globalVals, "stopped")
+		vars["global"] = globalVals
 	}
 
-	_, err = h.Upgrade(i.name, genChart(channel, chart), vals)
+	_, err := h.Upgrade(i.name, genChart(channel, chart), vars)
 	return err
 }
 

@@ -42,9 +42,10 @@ func (d *Deployment) Age() int64 {
 	return parseOldestAge(d.getPods())
 }
 
-func (d *Deployment) Status() constant.AppStatusType {
+func (d *Deployment) Status(stopped bool) constant.AppStatusType {
 	status := d.object.Status
-	return parseStatus(status.Replicas, status.AvailableReplicas, status.UpdatedReplicas, status.ReadyReplicas, d.getPods())
+	spec := d.object.Spec
+	return parseStatus(*spec.Replicas, status.AvailableReplicas, status.UpdatedReplicas, status.ReadyReplicas, d.getPods(), stopped)
 }
 
 func (d *Deployment) getPods() []*v1.Pod {

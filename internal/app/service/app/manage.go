@@ -66,6 +66,10 @@ func (m *Manager) UnInstall(name string) error {
 
 func (m *Manager) GetApp(name string) (*Instance, error) {
 	app := newApp(m.ctx, m, name)
+	if app.release == nil {
+		return nil, ErrAppNotFound
+	}
+
 	app.components = component.NewComponents()
 
 	selector := labels.NewSelector()
@@ -99,7 +103,7 @@ func (m *Manager) GetApp(name string) (*Instance, error) {
 	}
 
 	if len(app.Components().Items()) == 0 {
-		return nil, &ErrAppNotFound{Name: app.name}
+		return nil, ErrAppNotFound
 	}
 
 	return app, nil

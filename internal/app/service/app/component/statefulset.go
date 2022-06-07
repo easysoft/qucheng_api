@@ -43,9 +43,10 @@ func (s *Statefulset) Age() int64 {
 	return parseOldestAge(s.getPods())
 }
 
-func (s *Statefulset) Status() constant.AppStatusType {
+func (s *Statefulset) Status(stopped bool) constant.AppStatusType {
 	status := s.object.Status
-	return parseStatus(status.Replicas, status.AvailableReplicas, status.UpdatedReplicas, status.ReadyReplicas, s.getPods())
+	spec := s.object.Spec
+	return parseStatus(*spec.Replicas, status.AvailableReplicas, status.UpdatedReplicas, status.ReadyReplicas, s.getPods(), stopped)
 }
 
 func (s *Statefulset) getPods() []*v1.Pod {

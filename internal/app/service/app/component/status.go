@@ -13,11 +13,16 @@ import (
 )
 
 func parseStatus(replicas, availableReplicas, updatedReplicas, readyReplicas int32,
-	pods []*v1.Pod) (appStatus constant.AppStatusType) {
+	pods []*v1.Pod, stopped bool) (appStatus constant.AppStatusType) {
 
 	appStatus = constant.AppStatusUnknown
 	if replicas == 0 {
-		appStatus = constant.AppStatusStopped
+		if stopped && availableReplicas > 0 {
+			appStatus = constant.AppStatusStopping
+		}
+		if availableReplicas == 0 {
+			appStatus = constant.AppStatusStopped
+		}
 		return
 	}
 

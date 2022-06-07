@@ -2,12 +2,17 @@ package app
 
 import (
 	"context"
+	"reflect"
+	"strings"
 
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/model"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service/app/component"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/constant"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/kube/cluster"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/kube/metric"
+	"gitlab.zcorp.cc/pangu/cne-api/pkg/tlog"
+
+	"helm.sh/helm/v3/pkg/release"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/labels"
@@ -24,14 +29,32 @@ type Instance struct {
 	components *component.Components
 
 	ks *cluster.Cluster
+
+	release *release.Release
 }
 
 func newApp(ctx context.Context, am *Manager, name string) *Instance {
-	return &Instance{
+
+	i := &Instance{
 		ctx:         ctx,
 		clusterName: am.clusterName, namespace: am.namespace, name: name,
 		ks: am.ks,
 	}
+
+	i.release = i.fetchRelease()
+	return i
+}
+
+func (i *Instance) fetchRelease() *release.Release {
+	getter := &ReleaseGetter{
+		namespace: i.namespace,
+		store:     i.ks.Store,
+	}
+	rel, err := getter.Last(i.name)
+	if err != nil {
+		tlog.WithCtx(i.ctx).ErrorS(err, "parse release failed")
+	}
+	return rel
 }
 
 func (i *Instance) getServices() ([]*v1.Service, error) {
@@ -43,6 +66,8 @@ func (i *Instance) Components() *component.Components {
 }
 
 func (i *Instance) ParseStatus() *model.AppRespStatus {
+	var settingStopped = false
+
 	data := &model.AppRespStatus{
 		Components: make([]model.AppRespStatusComponent, 0),
 		Status:     constant.AppStatusMap[constant.AppStatusUnknown],
@@ -53,13 +78,21 @@ func (i *Instance) ParseStatus() *model.AppRespStatus {
 		return data
 	}
 
+	stopped, err := i.settingParse("global.stopped")
+	tlog.WithCtx(i.ctx).InfoS("got stopped status", "data", stopped)
+	if err == nil {
+		if stop, ok := stopped.(bool); ok {
+			settingStopped = stop
+		}
+	}
+
 	for _, c := range i.components.Items() {
 		resC := model.AppRespStatusComponent{
 			Name:       c.Name(),
 			Kind:       c.Kind(),
 			Replicas:   c.Replicas(),
-			StatusCode: c.Status(),
-			Status:     constant.AppStatusMap[c.Status()],
+			StatusCode: c.Status(settingStopped),
+			Status:     constant.AppStatusMap[c.Status(settingStopped)],
 			Age:        c.Age(),
 		}
 		data.Components = append(data.Components, resC)
@@ -105,6 +138,44 @@ func (i *Instance) ParseNodePort() int32 {
 
 func (i *Instance) Settings() *Settings {
 	return newSettings(i)
+}
+
+func (i *Instance) settingParse(path string) (interface{}, error) {
+	var err error
+	var ok bool
+	var node map[string]interface{}
+	var data interface{}
+
+	frames := strings.Split(path, ".")
+	node = i.release.Config
+
+	if len(frames) > 1 {
+		for _, frame := range frames[0 : len(frames)-1] {
+			n, ok := node[frame]
+			if !ok {
+				err = ErrPathParseFailed
+				break
+			}
+			ntype := reflect.TypeOf(n)
+			if ntype.Kind() != reflect.Map {
+				err = ErrPathParseFailed
+				break
+			}
+			node = n.(map[string]interface{})
+		}
+		if err != nil {
+			return nil, err
+		}
+		data, ok = node[frames[len(frames)-1]]
+	} else {
+		data, ok = node[path]
+	}
+
+	if !ok {
+		return nil, ErrPathParseFailed
+	}
+
+	return data, nil
 }
 
 func (i *Instance) GetMetrics() *model.AppMetric {
