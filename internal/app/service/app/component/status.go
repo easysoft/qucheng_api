@@ -36,6 +36,7 @@ func parseStatus(replicas, availableReplicas, updatedReplicas, readyReplicas int
 	}
 
 	for _, pod := range pods {
+		createTime := pod.CreationTimestamp
 		for _, ctnStatus := range pod.Status.ContainerStatuses {
 			if !*ctnStatus.Started {
 				if ctnStatus.RestartCount >= 3 {
@@ -43,6 +44,10 @@ func parseStatus(replicas, availableReplicas, updatedReplicas, readyReplicas int
 					break
 				}
 
+				if time.Now().Unix()-createTime.Unix() > 300 {
+					appStatus = constant.AppStatusAbnormal
+					break
+				}
 				//if ctnStatus.State.Waiting != nil && ctnStatus.State.Waiting.Reason == "CrashLoopBackOff" {
 				//	appStatus = constant.AppStatusAbnormal
 				//	break
