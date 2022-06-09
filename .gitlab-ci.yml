@@ -55,4 +55,4 @@ deploy:
   script:
     - kubectl rollout restart deploy/cne-api -n cne-system --kubeconfig=$HOME/.kube/pre.kubeconfig
   only:
-    - master
+    - test
