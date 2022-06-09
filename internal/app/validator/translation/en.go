@@ -50,6 +50,35 @@ func RegisterCustomENTranslations(v *validator.Validate, trans ut.Translator) (e
 				return t
 			},
 		},
+		{
+			tag: "version_format",
+			customRegisFunc: func(ut ut.Translator) (err error) {
+
+				if err = ut.Add("version_invalid_fmt", "{0} {1} is invalid", false); err != nil {
+					return
+				}
+				return
+
+			},
+			customTransFunc: func(ut ut.Translator, fe validator.FieldError) string {
+
+				var err error
+				var t string
+
+				t, err = ut.T("version_invalid_fmt", strings.ToLower(fe.Field()), fe.Value().(string))
+				if err != nil {
+					goto END
+				}
+
+			END:
+				if err != nil {
+					fmt.Printf("warning: error translating FieldError: %s", err)
+					return fe.(error).Error()
+				}
+
+				return t
+			},
+		},
 	}
 
 	for _, t := range translations {

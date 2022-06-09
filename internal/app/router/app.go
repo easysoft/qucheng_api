@@ -27,7 +27,7 @@ import (
 // @Param Authorization header string false "jwtToken"
 // @Param X-Auth-Token header string false "staticToken"
 // @Security ApiKeyAuth
-// @Param body body model.AppCreateModel true "meta"
+// @Param body body model.AppCreateOrUpdateModel true "meta"
 // @Success 201 {object} response2xx
 // @Failure 500 {object} response5xx
 // @Router /api/cne/app/install [post]
@@ -35,7 +35,7 @@ func AppInstall(c *gin.Context) {
 	var (
 		ctx  = c.Request.Context()
 		err  error
-		body model.AppCreateModel
+		body model.AppCreateOrUpdateModel
 		i    *app.Instance
 	)
 	if err = c.ShouldBindJSON(&body); err != nil {
@@ -217,7 +217,7 @@ func AppStop(c *gin.Context) {
 // @Param Authorization header string false "jwtToken"
 // @Param X-Auth-Token header string false "staticToken"
 // @Security ApiKeyAuth
-// @Param body body model.AppCreateModel true "meta"
+// @Param body body model.AppCreateOrUpdateModel true "meta"
 // @Success 201 {object} response2xx
 // @Failure 500 {object} response5xx
 // @Router /api/cne/app/settings [post]
@@ -225,7 +225,7 @@ func AppPatchSettings(c *gin.Context) {
 	var (
 		ctx  = c.Request.Context()
 		err  error
-		body model.AppCreateModel
+		body model.AppCreateOrUpdateModel
 
 		i *app.Instance
 	)

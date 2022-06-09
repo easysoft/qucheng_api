@@ -9,10 +9,11 @@ type AppModel struct {
 	Name string `form:"name" json:"name" binding:"required"`
 }
 
-type AppCreateModel struct {
+type AppCreateOrUpdateModel struct {
 	AppModel
 	Channel  string          `json:"channel"`
 	Chart    string          `json:"chart" binding:"required"`
+	Version  string          `json:"version" binding:"version_format"`
 	Settings []stringSetting `json:"settings"`
 }
 

@@ -29,12 +29,13 @@ type Instance struct {
 	namespace   string
 	name        string
 
-	selector   labels.Selector
-	components *component.Components
+	selector labels.Selector
 
 	ks *cluster.Cluster
 
 	release *release.Release
+
+	CurrentChartVersion string
 }
 
 func newApp(ctx context.Context, am *Manager, name string) *Instance {
@@ -47,6 +48,10 @@ func newApp(ctx context.Context, am *Manager, name string) *Instance {
 
 	i.release = i.fetchRelease()
 	return i
+}
+
+func (i *Instance) prepare() {
+	i.CurrentChartVersion = i.release.Chart.Metadata.Version
 }
 
 func (i *Instance) fetchRelease() *release.Release {
@@ -65,12 +70,34 @@ func (i *Instance) getServices() ([]*v1.Service, error) {
 	return i.ks.Store.ListServices(i.namespace, i.selector)
 }
 
-func (i *Instance) Components() *component.Components {
-	return i.components
+func (i *Instance) getComponents() *component.Components {
+	components := component.NewComponents()
+
+	selector := labels.Set{"release": i.name}.AsSelector()
+	i.selector = selector
+
+	deployments, _ := i.ks.Store.ListDeployments(i.namespace, selector)
+
+	if len(deployments) >= 1 {
+		for _, d := range deployments {
+			components.Add(component.NewDeployComponent(d, i.ks))
+		}
+	}
+
+	statefulsets, _ := i.ks.Store.ListStatefulSets(i.namespace, selector)
+
+	if len(statefulsets) >= 1 {
+		for _, s := range statefulsets {
+			components.Add(component.NewStatefulsetComponent(s, i.ks))
+		}
+	}
+
+	return components
 }
 
 func (i *Instance) ParseStatus() *model.AppRespStatus {
 	var settingStopped = false
+	components := i.getComponents()
 
 	data := &model.AppRespStatus{
 		Components: make([]model.AppRespStatusComponent, 0),
@@ -78,19 +105,18 @@ func (i *Instance) ParseStatus() *model.AppRespStatus {
 		Age:        0,
 	}
 
-	if len(i.components.Items()) == 0 {
+	if len(components.Items()) == 0 {
 		return data
 	}
 
 	stopped, err := i.settingParse("global.stopped")
-	tlog.WithCtx(i.ctx).InfoS("got stopped status", "data", stopped)
 	if err == nil {
 		if stop, ok := stopped.(bool); ok {
 			settingStopped = stop
 		}
 	}
 
-	for _, c := range i.components.Items() {
+	for _, c := range components.Items() {
 		resC := model.AppRespStatusComponent{
 			Name:       c.Name(),
 			Kind:       c.Kind(),

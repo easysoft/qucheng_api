@@ -25,7 +25,7 @@ func (i *Instance) Stop(chart, channel string) error {
 	}
 
 	h, _ := helm.NamespaceScope(i.namespace)
-	_, err := h.Upgrade(i.name, genChart(channel, chart), vars)
+	_, err := h.Upgrade(i.name, genChart(channel, chart), i.CurrentChartVersion, vars)
 	return err
 }
 
@@ -41,14 +41,15 @@ func (i *Instance) Start(chart, channel string) error {
 		vars["global"] = globalVals
 	}
 
-	_, err := h.Upgrade(i.name, genChart(channel, chart), vars)
+	_, err := h.Upgrade(i.name, genChart(channel, chart), i.CurrentChartVersion, vars)
 	return err
 }
 
-func (i *Instance) PatchSettings(chart string, body model.AppCreateModel) error {
+func (i *Instance) PatchSettings(chart string, body model.AppCreateOrUpdateModel) error {
 	var (
-		err  error
-		vals map[string]interface{}
+		err     error
+		vals    map[string]interface{}
+		version = i.CurrentChartVersion
 	)
 
 	h, _ := helm.NamespaceScope(i.namespace)
@@ -70,7 +71,10 @@ func (i *Instance) PatchSettings(chart string, body model.AppCreateModel) error 
 		return err
 	}
 
-	_, err = h.Upgrade(i.name, genChart(body.Channel, chart), vals)
+	if body.Version != "" {
+		version = body.Version
+	}
+	_, err = h.Upgrade(i.name, genChart(body.Channel, chart), version, vals)
 	return err
 }
 

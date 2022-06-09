@@ -48,9 +48,10 @@ func NamespaceScope(namespace string) (*Action, error) {
 	return h, nil
 }
 
-func (h *Action) Install(name, chart string, settings []string) (*release.Release, error) {
+func (h *Action) Install(name, chart, version string, settings []string) (*release.Release, error) {
 	client := action.NewInstall(h.actionConfig)
 
+	client.ChartPathOptions.Version = version
 	cp, err := client.ChartPathOptions.LocateChart(chart, h.settings)
 	if err != nil {
 		return nil, err
@@ -97,11 +98,12 @@ func (h *Action) GetRelease(name string) (*release.Release, error) {
 	return rel, err
 }
 
-func (h *Action) Upgrade(name string, chart string, chartValues map[string]interface{}) (interface{}, error) {
+func (h *Action) Upgrade(name, chart, version string, chartValues map[string]interface{}) (interface{}, error) {
 	client := action.NewUpgrade(h.actionConfig)
 	valueOpts := &values.Options{}
 
 	client.Namespace = h.namespace
+	client.ChartPathOptions.Version = version
 
 	cp, err := client.ChartPathOptions.LocateChart(chart, h.settings)
 	if err != nil {
