@@ -11,8 +11,9 @@ import (
 	"syscall"
 
 	"github.com/spf13/cobra"
-	gins "gitlab.zcorp.cc/pangu/cne-api/internal/app/serve"
 	"k8s.io/klog/v2"
+
+	gins "gitlab.zcorp.cc/pangu/cne-api/internal/app/serve"
 )
 
 func NewCmdServe() *cobra.Command {

@@ -2,14 +2,16 @@ package validator
 
 import (
 	"fmt"
+
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
 	enTranslations "github.com/go-playground/validator/v10/translations/en"
+	"k8s.io/klog/v2"
+
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/validator/field"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/validator/translation"
-	"k8s.io/klog/v2"
 )
 
 var trans ut.Translator

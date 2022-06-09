@@ -8,9 +8,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"k8s.io/klog/v2"
+
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/model"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service"
-	"k8s.io/klog/v2"
 )
 
 // MiddlewareInstall 安装中间件

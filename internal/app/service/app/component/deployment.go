@@ -5,11 +5,12 @@
 package component
 
 import (
-	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/constant"
-	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/kube/cluster"
 	metaappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
+
+	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/constant"
+	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/kube/cluster"
 )
 
 type Deployment struct {
