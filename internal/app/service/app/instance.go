@@ -102,6 +102,7 @@ func (i *Instance) ParseStatus() *model.AppRespStatus {
 	data := &model.AppRespStatus{
 		Components: make([]model.AppRespStatusComponent, 0),
 		Status:     constant.AppStatusMap[constant.AppStatusUnknown],
+		Version:    i.CurrentChartVersion,
 		Age:        0,
 	}
 
