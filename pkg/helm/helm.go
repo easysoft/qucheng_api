@@ -6,11 +6,13 @@ package helm
 
 import (
 	"context"
+	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm/schema"
 	"log"
 	"os"
 
 	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
+	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm/form"
 	"gopkg.in/yaml.v3"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
@@ -20,8 +22,6 @@ import (
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/strvals"
-
-	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm/form"
 )
 
 type Action struct {
@@ -141,7 +141,7 @@ func (h *Action) PatchValues(dest map[string]interface{}, setvals []string) erro
 	return nil
 }
 
-func GetChart(name string) (*chart.Chart, error) {
+func GetChart(name, version string) (*chart.Chart, error) {
 	var (
 		err error
 	)
@@ -152,6 +152,7 @@ func GetChart(name string) (*chart.Chart, error) {
 	h := newAction(settings, actionConfig)
 	client := action.NewShowWithConfig(action.ShowAll, h.actionConfig)
 
+	client.ChartPathOptions.Version = version
 	cp, err := client.ChartPathOptions.LocateChart(name, settings)
 	if err != nil {
 		return nil, err
@@ -167,19 +168,77 @@ func GetChartByFile(fp string) (*chart.Chart, error) {
 
 func ParseForm(files []*chart.File) (*form.DynamicForm, error) {
 	var (
-		err     error
-		dynForm form.DynamicForm
+		err      error
+		dynForm  form.DynamicForm
+		formFile *chart.File
 	)
 
 	for _, f := range files {
 		if f.Name == "form.yaml" {
-			err = yaml.Unmarshal(f.Data, &dynForm)
+			formFile = f
 			break
 		}
 	}
+	if formFile == nil {
+		return nil, errors.New("form.yaml not found")
+	}
+
+	err = yaml.Unmarshal(formFile.Data, &dynForm)
 
 	if &dynForm == nil {
 		err = errors.New("no dynamic form found")
 	}
 	return &dynForm, err
+}
+
+func ParseChartCategories(name, version string) (map[int]string, error) {
+	ch, err := GetChart(name, version)
+	if err != nil {
+		return nil, err
+	}
+
+	return parseChartCategories(ch), nil
+}
+
+func ParseChartCategoriesByPath(fp string) (map[int]string, error) {
+	ch, err := GetChartByFile(fp)
+	if err != nil {
+		return nil, err
+	}
+
+	return parseChartCategories(ch), nil
+}
+
+func parseChartCategories(ch *chart.Chart) map[int]string {
+	var result = make(map[int]string, 0)
+	var parentCh *chart.Chart
+	var err error
+
+	for _, depCh := range ch.Lock.Dependencies {
+		if depCh.Name == DependCommonChart {
+			parentCh, err = GetChart(depCh.Name, depCh.Version)
+			if err == nil {
+				break
+			}
+		}
+	}
+
+	result = schema.LoadCategories(ch, parentCh)
+	return result
+}
+
+func ParseChartDependencies(name, version string) ([]*chart.Dependency, error) {
+	ch, err := GetChart(name, version)
+	if err != nil {
+		return nil, err
+	}
+
+	var dependencies []*chart.Dependency
+	for _, depCh := range ch.Lock.Dependencies {
+		if depCh.Name != DependCommonChart {
+			dependencies = append(dependencies, depCh)
+		}
+	}
+
+	return dependencies, nil
 }
