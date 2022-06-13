@@ -11,11 +11,13 @@ import (
 	"github.com/chartmuseum/helm-push/pkg/helm"
 )
 
-func New() (*cm.Client, error) {
-	var repo *helm.Repo
-	var err error
-	repo, err = helm.GetRepoByName("qucheng-test")
-	if err != nil {
+func New(repoName string) (*cm.Client, error) {
+	var (
+		err  error
+		repo *helm.Repo
+	)
+
+	if repo, err = helm.GetRepoByName(repoName); err != nil {
 		return nil, err
 	}
 
