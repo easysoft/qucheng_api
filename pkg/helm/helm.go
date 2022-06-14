@@ -228,7 +228,7 @@ func ParseChartCategories(ch *chart.Chart) []string {
 
 	chFull := ch
 	if !isValid(ch) {
-		chFull, err = GetChart(genChart(channel, ch.Metadata.Name), ch.Metadata.Version)
+		chFull, err = GetChart(GenChart(channel, ch.Metadata.Name), ch.Metadata.Version)
 		if err != nil {
 			return data
 		}
@@ -254,7 +254,7 @@ func ReadSchemaFromChart(ch *chart.Chart, category string, channel string) ([]by
 	var err error
 	chFull := ch
 	if !isValid(ch) {
-		chFull, err = GetChart(genChart(channel, ch.Metadata.Name), ch.Metadata.Version)
+		chFull, err = GetChart(GenChart(channel, ch.Metadata.Name), ch.Metadata.Version)
 		if err != nil {
 			return nil, err
 		}
@@ -276,10 +276,10 @@ func isValid(ch *chart.Chart) bool {
 	return len(ch.Dependencies()) == len(ch.Lock.Dependencies)
 }
 
-func genRepo(channel string) string {
+func GenRepo(channel string) string {
 	return DefaultRepoPrefix + channel
 }
 
-func genChart(channel, chartName string) string {
-	return fmt.Sprintf("%s/%s", genRepo(channel), chartName)
+func GenChart(channel, chartName string) string {
+	return fmt.Sprintf("%s/%s", GenRepo(channel), chartName)
 }
