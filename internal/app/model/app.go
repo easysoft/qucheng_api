@@ -38,6 +38,16 @@ type AppListModel struct {
 	Apps []NamespacedApp `json:"apps" binding:"required"`
 }
 
+type AppComponentModel struct {
+	AppModel
+	Component string `json:"component" form:"component" binding:"required"`
+}
+
+type AppSchemaModel struct {
+	AppComponentModel
+	Category string `json:"category" form:"category" binding:"required"`
+}
+
 type NamespacedApp struct {
 	Namespace string `json:"namespace" binding:"required"`
 	Name      string `json:"name" binding:"required"`

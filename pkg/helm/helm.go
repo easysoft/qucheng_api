@@ -6,13 +6,11 @@ package helm
 
 import (
 	"context"
-	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm/schema"
-	"log"
-	"os"
-
+	"fmt"
 	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
 	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm/form"
+	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm/schema"
 	"gopkg.in/yaml.v3"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
@@ -22,6 +20,8 @@ import (
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/strvals"
+	"log"
+	"os"
 )
 
 type Action struct {
@@ -191,48 +191,7 @@ func ParseForm(files []*chart.File) (*form.DynamicForm, error) {
 	return &dynForm, err
 }
 
-func ParseChartCategories(name, version string) (map[int]string, error) {
-	ch, err := GetChart(name, version)
-	if err != nil {
-		return nil, err
-	}
-
-	return parseChartCategories(ch), nil
-}
-
-func ParseChartCategoriesByPath(fp string) (map[int]string, error) {
-	ch, err := GetChartByFile(fp)
-	if err != nil {
-		return nil, err
-	}
-
-	return parseChartCategories(ch), nil
-}
-
-func parseChartCategories(ch *chart.Chart) map[int]string {
-	var result = make(map[int]string, 0)
-	var parentCh *chart.Chart
-	var err error
-
-	for _, depCh := range ch.Lock.Dependencies {
-		if depCh.Name == DependCommonChart {
-			parentCh, err = GetChart(depCh.Name, depCh.Version)
-			if err == nil {
-				break
-			}
-		}
-	}
-
-	result = schema.LoadCategories(ch, parentCh)
-	return result
-}
-
-func ParseChartDependencies(name, version string) ([]*chart.Dependency, error) {
-	ch, err := GetChart(name, version)
-	if err != nil {
-		return nil, err
-	}
-
+func ParseChartDependencies(ch *chart.Chart) ([]*chart.Dependency, error) {
 	var dependencies []*chart.Dependency
 	for _, depCh := range ch.Lock.Dependencies {
 		if depCh.Name != DependCommonChart {
@@ -241,4 +200,86 @@ func ParseChartDependencies(name, version string) ([]*chart.Dependency, error) {
 	}
 
 	return dependencies, nil
+}
+
+func ParseChartCategoriesByChart(name, version string) ([]string, error) {
+	ch, err := GetChart(name, version)
+	if err != nil {
+		return nil, err
+	}
+
+	return ParseChartCategories(ch), nil
+}
+
+func ParseChartCategoriesByPath(fp string) ([]string, error) {
+	ch, err := GetChartByFile(fp)
+	if err != nil {
+		return nil, err
+	}
+
+	return ParseChartCategories(ch), nil
+}
+
+func ParseChartCategories(ch *chart.Chart) []string {
+	var parentCh *chart.Chart
+	var err error
+	var channel = "test"
+	var data = make([]string, 0)
+
+	chFull := ch
+	if !isValid(ch) {
+		chFull, err = GetChart(genChart(channel, ch.Metadata.Name), ch.Metadata.Version)
+		if err != nil {
+			return data
+		}
+	}
+
+	for _, depCh := range chFull.Dependencies() {
+		if depCh.Metadata.Type == "library" {
+			parentCh = depCh
+			break
+		}
+	}
+
+	ss := schema.LoadCategories(ch, parentCh)
+	return ss.Categories()
+}
+
+func ReadSchemaFromChart(ch *chart.Chart, category string, channel string) ([]byte, error) {
+	data, found := schema.LoadSchema(ch, category)
+	if found {
+		return data, nil
+	}
+
+	var err error
+	chFull := ch
+	if !isValid(ch) {
+		chFull, err = GetChart(genChart(channel, ch.Metadata.Name), ch.Metadata.Version)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	for _, dep := range chFull.Dependencies() {
+		if dep.Metadata.Type != "library" {
+			continue
+		}
+
+		if data, found = schema.LoadSchema(dep, category); found {
+			break
+		}
+	}
+	return data, nil
+}
+
+func isValid(ch *chart.Chart) bool {
+	return len(ch.Dependencies()) == len(ch.Lock.Dependencies)
+}
+
+func genRepo(channel string) string {
+	return DefaultRepoPrefix + channel
+}
+
+func genChart(channel, chartName string) string {
+	return fmt.Sprintf("%s/%s", genRepo(channel), chartName)
 }

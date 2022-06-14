@@ -68,3 +68,7 @@ type ClusterMetric struct {
 	NodeCount int        `json:"node_count"`
 	Metrics   NodeMetric `json:"metrics"`
 }
+
+type Component struct {
+	Name string `json:"name"`
+}

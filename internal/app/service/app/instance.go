@@ -6,6 +6,7 @@ package app
 
 import (
 	"context"
+	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm"
 	"reflect"
 	"strings"
 
@@ -35,6 +36,7 @@ type Instance struct {
 
 	release *release.Release
 
+	ChartName           string
 	CurrentChartVersion string
 }
 
@@ -51,6 +53,7 @@ func newApp(ctx context.Context, am *Manager, name string) *Instance {
 }
 
 func (i *Instance) prepare() {
+	i.ChartName = i.release.Chart.Metadata.Name
 	i.CurrentChartVersion = i.release.Chart.Metadata.Version
 }
 
@@ -207,6 +210,85 @@ func (i *Instance) settingParse(path string) (interface{}, error) {
 	}
 
 	return data, nil
+}
+
+func (i *Instance) GetComponents() []model.Component {
+	var components []model.Component
+
+	components = append(components, model.Component{Name: i.ChartName})
+	deps, err := helm.ParseChartDependencies(i.release.Chart)
+	if err != nil {
+		return components
+	}
+
+	for _, dep := range deps {
+		components = append(components, model.Component{
+			Name: dep.Name,
+		})
+	}
+
+	return components
+}
+
+func (i *Instance) GetSchemaCategories(component string) interface{} {
+	var data []string
+
+	if component == i.ChartName {
+		data = helm.ParseChartCategories(i.release.Chart)
+	} else {
+		var exist = false
+		for _, dep := range i.release.Chart.Lock.Dependencies {
+			if dep.Name == component {
+				exist = true
+				break
+			}
+		}
+
+		if exist {
+			ch, err := helm.GetChart(genChart("test", i.ChartName), i.CurrentChartVersion)
+			if err != nil {
+				return data
+			}
+
+			for _, dep := range ch.Dependencies() {
+				if dep.Name() == component {
+					data = helm.ParseChartCategories(dep)
+					break
+				}
+			}
+		}
+	}
+
+	return data
+}
+
+func (i *Instance) GetSchema(component, category string) string {
+	var data string
+
+	if component == i.ChartName {
+		jbody, err := helm.ReadSchemaFromChart(i.release.Chart, category, "test")
+		tlog.WithCtx(i.ctx).InfoS("get schema content", "data", string(jbody))
+		if err != nil {
+			tlog.WithCtx(i.ctx).ErrorS(err, "get schema failed")
+			return ""
+		}
+		data = string(jbody)
+	} else {
+		ch, err := helm.GetChart(genChart("test", i.ChartName), i.CurrentChartVersion)
+		if err != nil {
+			return ""
+		}
+		for _, dep := range ch.Dependencies() {
+			if dep.Name() == component {
+				jbody, err := helm.ReadSchemaFromChart(dep, category, "test")
+				if err != nil {
+					return ""
+				}
+				data = string(jbody)
+			}
+		}
+	}
+	return data
 }
 
 func (i *Instance) GetMetrics() *model.AppMetric {

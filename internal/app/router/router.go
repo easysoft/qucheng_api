@@ -57,6 +57,10 @@ func Config(r *gin.Engine) {
 		api.GET("/app/metric", AppMetric)
 		api.GET("/test", AppTest)
 
+		api.GET("/app/components", AppComponents)
+		api.GET("/app/component/categories", AppComCategory)
+		api.GET("/app/component/schema", AppComSchema)
+
 		api.POST("/namespace/create", NamespaceCreate)
 		api.POST("/namespace/recycle", NamespaceRecycle)
 		api.GET("/namespace", NamespaceGet)
