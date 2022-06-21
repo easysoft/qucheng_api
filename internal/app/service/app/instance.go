@@ -55,6 +55,8 @@ func newApp(ctx context.Context, am *Manager, name string) *Instance {
 func (i *Instance) prepare() {
 	i.ChartName = i.release.Chart.Metadata.Name
 	i.CurrentChartVersion = i.release.Chart.Metadata.Version
+
+	i.selector = labels.Set{"release": i.name}.AsSelector()
 }
 
 func (i *Instance) fetchRelease() *release.Release {
@@ -76,10 +78,7 @@ func (i *Instance) getServices() ([]*v1.Service, error) {
 func (i *Instance) getComponents() *component.Components {
 	components := component.NewComponents()
 
-	selector := labels.Set{"release": i.name}.AsSelector()
-	i.selector = selector
-
-	deployments, _ := i.ks.Store.ListDeployments(i.namespace, selector)
+	deployments, _ := i.ks.Store.ListDeployments(i.namespace, i.selector)
 
 	if len(deployments) >= 1 {
 		for _, d := range deployments {
@@ -87,7 +86,7 @@ func (i *Instance) getComponents() *component.Components {
 		}
 	}
 
-	statefulsets, _ := i.ks.Store.ListStatefulSets(i.namespace, selector)
+	statefulsets, _ := i.ks.Store.ListStatefulSets(i.namespace, i.selector)
 
 	if len(statefulsets) >= 1 {
 		for _, s := range statefulsets {
