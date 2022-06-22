@@ -8,12 +8,14 @@ import (
 	"context"
 
 	"github.com/go-playground/validator/v10"
+
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service"
 )
 
 func New() map[string]validator.Func {
 	return map[string]validator.Func{
 		"namespace_exist": namespaceExist,
+		"version_format":  versionFormat,
 	}
 }
 
@@ -28,4 +30,12 @@ func namespaceExist(fl validator.FieldLevel) bool {
 
 	// default reflect.String:
 	return service.Namespaces(context.TODO(), topField.String()).Has(field.String())
+}
+
+func versionFormat(fl validator.FieldLevel) bool {
+	val := fl.Field().String()
+	if val != "" {
+		return versionRegexSemantic.MatchString(val)
+	}
+	return true
 }

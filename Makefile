@@ -37,7 +37,7 @@ gencopyright: ## add copyright
 
 fmt: ## fmt code
 	gofmt -s -w .
-	goimports -w .
+	goimports -w -local gitlab.zcorp.cc/pangu/cne-api .
 	@echo gofmt -l
 	@OUTPUT=`gofmt -l . 2>&1`; \
 	if [ "$$OUTPUT" ]; then \

@@ -6,6 +6,7 @@ package router
 
 import (
 	"fmt"
+	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm"
 	"net/http"
 	"sync"
 
@@ -27,7 +28,7 @@ import (
 // @Param Authorization header string false "jwtToken"
 // @Param X-Auth-Token header string false "staticToken"
 // @Security ApiKeyAuth
-// @Param body body model.AppCreateModel true "meta"
+// @Param body body model.AppCreateOrUpdateModel true "meta"
 // @Success 201 {object} response2xx
 // @Failure 500 {object} response5xx
 // @Router /api/cne/app/install [post]
@@ -35,7 +36,7 @@ func AppInstall(c *gin.Context) {
 	var (
 		ctx  = c.Request.Context()
 		err  error
-		body model.AppCreateModel
+		body model.AppCreateOrUpdateModel
 		i    *app.Instance
 	)
 	if err = c.ShouldBindJSON(&body); err != nil {
@@ -217,7 +218,7 @@ func AppStop(c *gin.Context) {
 // @Param Authorization header string false "jwtToken"
 // @Param X-Auth-Token header string false "staticToken"
 // @Security ApiKeyAuth
-// @Param body body model.AppCreateModel true "meta"
+// @Param body body model.AppCreateOrUpdateModel true "meta"
 // @Success 201 {object} response2xx
 // @Failure 500 {object} response5xx
 // @Router /api/cne/app/settings [post]
@@ -225,7 +226,7 @@ func AppPatchSettings(c *gin.Context) {
 	var (
 		ctx  = c.Request.Context()
 		err  error
-		body model.AppCreateModel
+		body model.AppCreateOrUpdateModel
 
 		i *app.Instance
 	)
@@ -251,7 +252,7 @@ func AppPatchSettings(c *gin.Context) {
 		renderError(c, http.StatusInternalServerError, errors.New(errPatchAppFailed))
 		return
 	}
-	tlog.WithCtx(ctx).InfoS("patch app settings failed", "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
+	tlog.WithCtx(ctx).InfoS("patch app settings successful", "cluster", body.Cluster, "namespace", body.Namespace, "name", body.Name)
 	renderSuccess(c, http.StatusOK)
 }
 
@@ -299,14 +300,20 @@ func AppStatus(c *gin.Context) {
 		parse App Uri
 	*/
 	data.AccessHost = ""
-	nodePort := i.ParseNodePort()
-	if nodePort > 0 {
-		nodePortIPS := service.Nodes(ctx, query.Cluster).ListNodePortIPS()
-		if len(nodePortIPS) != 0 {
-			accessHost := fmt.Sprintf("%s:%d", nodePortIPS[0], nodePort)
-			data.AccessHost = accessHost
+	ingressHosts := i.ListIngressHosts()
+	if len(ingressHosts) > 0 {
+		data.AccessHost = ingressHosts[0]
+	} else {
+		nodePort := i.ParseNodePort()
+		if nodePort > 0 {
+			nodePortIPS := service.Nodes(ctx, query.Cluster).ListNodePortIPS()
+			if len(nodePortIPS) != 0 {
+				accessHost := fmt.Sprintf("%s:%d", nodePortIPS[0], nodePort)
+				data.AccessHost = accessHost
+			}
 		}
 	}
+
 	renderJson(c, http.StatusOK, data)
 }
 
@@ -414,7 +421,7 @@ func AppListStatistics(c *gin.Context) {
 	renderJson(c, http.StatusOK, metricList)
 }
 
-func AppTest(c *gin.Context) {
+func AppComponents(c *gin.Context) {
 	var (
 		ctx = c.Request.Context()
 
@@ -422,7 +429,6 @@ func AppTest(c *gin.Context) {
 		query model.AppModel
 		i     *app.Instance
 	)
-
 	if err = c.ShouldBindQuery(&query); err != nil {
 		renderError(c, http.StatusBadRequest, err)
 		return
@@ -435,11 +441,80 @@ func AppTest(c *gin.Context) {
 			renderError(c, http.StatusNotFound, err)
 			return
 		}
+		renderError(c, http.StatusInternalServerError, errors.New(errGetAppStatusFailed))
+		return
+	}
+
+	data := i.GetComponents()
+	renderJson(c, http.StatusOK, data)
+}
+
+func AppComCategory(c *gin.Context) {
+	var (
+		ctx = c.Request.Context()
+
+		err   error
+		query model.AppComponentModel
+		i     *app.Instance
+	)
+	if err = c.ShouldBindQuery(&query); err != nil {
+		renderError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	i, err = service.Apps(ctx, query.Cluster, query.Namespace).GetApp(query.Name)
+	if err != nil {
+		tlog.WithCtx(ctx).ErrorS(err, errGetAppFailed, "cluster", query.Cluster, "namespace", query.Namespace, "name", query.Name)
+		if errors.Is(err, app.ErrAppNotFound) {
+			renderError(c, http.StatusNotFound, err)
+			return
+		}
+		renderError(c, http.StatusInternalServerError, errors.New(errGetAppStatusFailed))
+		return
+	}
+
+	data := i.GetSchemaCategories(query.Component)
+	renderJson(c, http.StatusOK, data)
+}
+
+func AppComSchema(c *gin.Context) {
+	var (
+		ctx = c.Request.Context()
+
+		err   error
+		query model.AppSchemaModel
+		i     *app.Instance
+	)
+	if err = c.ShouldBindQuery(&query); err != nil {
+		renderError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	i, err = service.Apps(ctx, query.Cluster, query.Namespace).GetApp(query.Name)
+	if err != nil {
+		tlog.WithCtx(ctx).ErrorS(err, errGetAppFailed, "cluster", query.Cluster, "namespace", query.Namespace, "name", query.Name)
+		if errors.Is(err, app.ErrAppNotFound) {
+			renderError(c, http.StatusNotFound, err)
+			return
+		}
+		renderError(c, http.StatusInternalServerError, errors.New(errGetAppStatusFailed))
+		return
+	}
+
+	data := i.GetSchema(query.Component, query.Category)
+	renderJson(c, http.StatusOK, data)
+}
+
+func AppTest(c *gin.Context) {
+
+	ch, err := helm.GetChart("qucheng-test/demo", "0.1.1")
+	if err != nil {
 		renderError(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	data := i.GetMetrics()
-
-	renderJson(c, 200, data)
+	for _, dep := range ch.Dependencies() {
+		fmt.Println(dep.Name(), dep.Files)
+	}
+	renderSuccess(c, 200)
 }

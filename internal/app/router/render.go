@@ -8,9 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-playground/validator/v10"
+	valid "gitlab.zcorp.cc/pangu/cne-api/internal/app/validator"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 const (
@@ -22,11 +23,11 @@ func renderError(c *gin.Context, code int, err error) {
 	errMsg := err.Error()
 	errs, ok := err.(validator.ValidationErrors)
 	if ok {
-		errlist := make([]string, 0, len(errs))
+		errors := make([]string, 0, len(errs))
 		for _, e := range errs {
-			errlist = append(errlist, e.Translate(trans))
+			errors = append(errors, e.Translate(valid.LoadTrans()))
 		}
-		errMsg = strings.Join(errlist, ";")
+		errMsg = strings.Join(errors, ";")
 	}
 	c.JSON(200, gin.H{
 		"code":      code,

@@ -11,6 +11,7 @@ import (
 	"github.com/ergoapi/util/exhash"
 	"github.com/google/uuid"
 	"github.com/sethvargo/go-envconfig"
+
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/model"
 	"gitlab.zcorp.cc/pangu/cne-api/pkg/external/mysql"
 )

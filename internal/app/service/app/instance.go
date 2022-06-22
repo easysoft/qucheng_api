@@ -6,6 +6,7 @@ package app
 
 import (
 	"context"
+	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm"
 	"reflect"
 	"strings"
 
@@ -29,12 +30,14 @@ type Instance struct {
 	namespace   string
 	name        string
 
-	selector   labels.Selector
-	components *component.Components
+	selector labels.Selector
 
 	ks *cluster.Cluster
 
 	release *release.Release
+
+	ChartName           string
+	CurrentChartVersion string
 }
 
 func newApp(ctx context.Context, am *Manager, name string) *Instance {
@@ -47,6 +50,13 @@ func newApp(ctx context.Context, am *Manager, name string) *Instance {
 
 	i.release = i.fetchRelease()
 	return i
+}
+
+func (i *Instance) prepare() {
+	i.ChartName = i.release.Chart.Metadata.Name
+	i.CurrentChartVersion = i.release.Chart.Metadata.Version
+
+	i.selector = labels.Set{"release": i.name}.AsSelector()
 }
 
 func (i *Instance) fetchRelease() *release.Release {
@@ -65,32 +75,51 @@ func (i *Instance) getServices() ([]*v1.Service, error) {
 	return i.ks.Store.ListServices(i.namespace, i.selector)
 }
 
-func (i *Instance) Components() *component.Components {
-	return i.components
+func (i *Instance) getComponents() *component.Components {
+	components := component.NewComponents()
+
+	deployments, _ := i.ks.Store.ListDeployments(i.namespace, i.selector)
+
+	if len(deployments) >= 1 {
+		for _, d := range deployments {
+			components.Add(component.NewDeployComponent(d, i.ks))
+		}
+	}
+
+	statefulsets, _ := i.ks.Store.ListStatefulSets(i.namespace, i.selector)
+
+	if len(statefulsets) >= 1 {
+		for _, s := range statefulsets {
+			components.Add(component.NewStatefulsetComponent(s, i.ks))
+		}
+	}
+
+	return components
 }
 
 func (i *Instance) ParseStatus() *model.AppRespStatus {
 	var settingStopped = false
+	components := i.getComponents()
 
 	data := &model.AppRespStatus{
 		Components: make([]model.AppRespStatusComponent, 0),
 		Status:     constant.AppStatusMap[constant.AppStatusUnknown],
+		Version:    i.CurrentChartVersion,
 		Age:        0,
 	}
 
-	if len(i.components.Items()) == 0 {
+	if len(components.Items()) == 0 {
 		return data
 	}
 
 	stopped, err := i.settingParse("global.stopped")
-	tlog.WithCtx(i.ctx).InfoS("got stopped status", "data", stopped)
 	if err == nil {
 		if stop, ok := stopped.(bool); ok {
 			settingStopped = stop
 		}
 	}
 
-	for _, c := range i.components.Items() {
+	for _, c := range components.Items() {
 		resC := model.AppRespStatusComponent{
 			Name:       c.Name(),
 			Kind:       c.Kind(),
@@ -117,6 +146,20 @@ func (i *Instance) ParseStatus() *model.AppRespStatus {
 	data.Status = constant.AppStatusMap[minStatusCode]
 	data.Age = maxAge
 	return data
+}
+
+func (i *Instance) ListIngressHosts() []string {
+	var hosts []string
+	ingresses, err := i.ks.Store.ListIngresses(i.namespace, i.selector)
+	if err != nil {
+		return hosts
+	}
+	for _, ing := range ingresses {
+		for _, rule := range ing.Spec.Rules {
+			hosts = append(hosts, rule.Host)
+		}
+	}
+	return hosts
 }
 
 func (i *Instance) ParseNodePort() int32 {
@@ -180,6 +223,85 @@ func (i *Instance) settingParse(path string) (interface{}, error) {
 	}
 
 	return data, nil
+}
+
+func (i *Instance) GetComponents() []model.Component {
+	var components []model.Component
+
+	components = append(components, model.Component{Name: i.ChartName})
+	deps, err := helm.ParseChartDependencies(i.release.Chart)
+	if err != nil {
+		return components
+	}
+
+	for _, dep := range deps {
+		components = append(components, model.Component{
+			Name: dep.Name,
+		})
+	}
+
+	return components
+}
+
+func (i *Instance) GetSchemaCategories(component string) interface{} {
+	var data []string
+
+	if component == i.ChartName {
+		data = helm.ParseChartCategories(i.release.Chart)
+	} else {
+		var exist = false
+		for _, dep := range i.release.Chart.Lock.Dependencies {
+			if dep.Name == component {
+				exist = true
+				break
+			}
+		}
+
+		if exist {
+			ch, err := helm.GetChart(genChart("test", i.ChartName), i.CurrentChartVersion)
+			if err != nil {
+				return data
+			}
+
+			for _, dep := range ch.Dependencies() {
+				if dep.Name() == component {
+					data = helm.ParseChartCategories(dep)
+					break
+				}
+			}
+		}
+	}
+
+	return data
+}
+
+func (i *Instance) GetSchema(component, category string) string {
+	var data string
+
+	if component == i.ChartName {
+		jbody, err := helm.ReadSchemaFromChart(i.release.Chart, category, "test")
+		tlog.WithCtx(i.ctx).InfoS("get schema content", "data", string(jbody))
+		if err != nil {
+			tlog.WithCtx(i.ctx).ErrorS(err, "get schema failed")
+			return ""
+		}
+		data = string(jbody)
+	} else {
+		ch, err := helm.GetChart(genChart("test", i.ChartName), i.CurrentChartVersion)
+		if err != nil {
+			return ""
+		}
+		for _, dep := range ch.Dependencies() {
+			if dep.Name() == component {
+				jbody, err := helm.ReadSchemaFromChart(dep, category, "test")
+				if err != nil {
+					return ""
+				}
+				data = string(jbody)
+			}
+		}
+	}
+	return data
 }
 
 func (i *Instance) GetMetrics() *model.AppMetric {

@@ -8,12 +8,9 @@ import (
 	"context"
 
 	"gitlab.zcorp.cc/pangu/cne-api/internal/app/model"
-	"gitlab.zcorp.cc/pangu/cne-api/internal/app/service/app/component"
 	"gitlab.zcorp.cc/pangu/cne-api/internal/pkg/kube/cluster"
 	"gitlab.zcorp.cc/pangu/cne-api/pkg/helm"
 	"gitlab.zcorp.cc/pangu/cne-api/pkg/tlog"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/selection"
 )
 
 type Manager struct {
@@ -32,7 +29,7 @@ func NewApps(ctx context.Context, clusterName, namespace string) *Manager {
 	}
 }
 
-func (m *Manager) Install(name string, body model.AppCreateModel) error {
+func (m *Manager) Install(name string, body model.AppCreateOrUpdateModel) error {
 	h, err := helm.NamespaceScope(m.namespace)
 	if err != nil {
 		return err
@@ -43,7 +40,7 @@ func (m *Manager) Install(name string, body model.AppCreateModel) error {
 		settings = append(settings, s.Key+"="+s.Val)
 	}
 	tlog.WithCtx(m.ctx).InfoS("build install settings", "namespace", m.namespace, "name", name, "settings", settings)
-	_, err = h.Install(name, genChart(body.Channel, body.Chart), settings)
+	_, err = h.Install(name, genChart(body.Channel, body.Chart), body.Version, settings)
 	if err != nil {
 		tlog.WithCtx(m.ctx).ErrorS(err, "helm install failed", "namespace", m.namespace, "name", name)
 		if _, e := h.GetRelease(name); e == nil {
@@ -70,41 +67,6 @@ func (m *Manager) GetApp(name string) (*Instance, error) {
 		return nil, ErrAppNotFound
 	}
 
-	app.components = component.NewComponents()
-
-	selector := labels.NewSelector()
-	//label1, _ := labels.NewRequirement("app.kubernetes.io/managed-by", selection.Equals, []string{"Helm"})
-	labelRelease, _ := labels.NewRequirement("release", selection.Equals, []string{name})
-	selector = selector.Add(*labelRelease)
-
-	app.selector = selector
-
-	deployments, err := m.ks.Store.ListDeployments(m.namespace, selector)
-	if err != nil {
-		return nil, err
-	}
-	if len(deployments) >= 1 {
-		for _, d := range deployments {
-			app.components.Add(component.NewDeployComponent(d, app.ks))
-			tlog.WithCtx(m.ctx).InfoS("find component with kind deployment", "cpName", d.Name)
-		}
-	}
-
-	statefulsets, err := m.ks.Store.ListStatefulSets(m.namespace, selector)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(statefulsets) >= 1 {
-		for _, s := range statefulsets {
-			app.components.Add(component.NewStatefulsetComponent(s, app.ks))
-			tlog.WithCtx(m.ctx).InfoS("find component with kind statefulset", "cpName", s.Name)
-		}
-	}
-
-	if len(app.Components().Items()) == 0 {
-		return nil, ErrAppNotFound
-	}
-
+	app.prepare()
 	return app, nil
 }
