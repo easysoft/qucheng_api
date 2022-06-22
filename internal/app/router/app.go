@@ -300,14 +300,20 @@ func AppStatus(c *gin.Context) {
 		parse App Uri
 	*/
 	data.AccessHost = ""
-	nodePort := i.ParseNodePort()
-	if nodePort > 0 {
-		nodePortIPS := service.Nodes(ctx, query.Cluster).ListNodePortIPS()
-		if len(nodePortIPS) != 0 {
-			accessHost := fmt.Sprintf("%s:%d", nodePortIPS[0], nodePort)
-			data.AccessHost = accessHost
+	ingressHosts := i.ListIngressHosts()
+	if len(ingressHosts) > 0 {
+		data.AccessHost = ingressHosts[0]
+	} else {
+		nodePort := i.ParseNodePort()
+		if nodePort > 0 {
+			nodePortIPS := service.Nodes(ctx, query.Cluster).ListNodePortIPS()
+			if len(nodePortIPS) != 0 {
+				accessHost := fmt.Sprintf("%s:%d", nodePortIPS[0], nodePort)
+				data.AccessHost = accessHost
+			}
 		}
 	}
+
 	renderJson(c, http.StatusOK, data)
 }
 

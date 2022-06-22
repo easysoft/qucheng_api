@@ -148,6 +148,20 @@ func (i *Instance) ParseStatus() *model.AppRespStatus {
 	return data
 }
 
+func (i *Instance) ListIngressHosts() []string {
+	var hosts []string
+	ingresses, err := i.ks.Store.ListIngresses(i.namespace, i.selector)
+	if err != nil {
+		return hosts
+	}
+	for _, ing := range ingresses {
+		for _, rule := range ing.Spec.Rules {
+			hosts = append(hosts, rule.Host)
+		}
+	}
+	return hosts
+}
+
 func (i *Instance) ParseNodePort() int32 {
 	var nodePort int32 = 0
 	services, err := i.getServices()
