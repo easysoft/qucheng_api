@@ -64,8 +64,12 @@ func parseOldestAge(pods []*v1.Pod) int64 {
 		oldest  = nowUnix
 	)
 	for _, pod := range pods {
-		podAge := pod.Status.StartTime.Unix()
+		startTime := pod.Status.StartTime
+		if startTime == nil {
+			continue
+		}
 
+		podAge := startTime.Unix()
 		if podAge-oldest < 0 {
 			oldest = podAge
 		}
